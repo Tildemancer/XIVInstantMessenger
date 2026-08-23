@@ -2,7 +2,7 @@
 <Project Sdk="Dalamud.NET.Sdk/15.0.0">
     <PropertyGroup>
         <Authors>NightmareXIV</Authors>
-        <Version>1.5.0.20</Version>
+        <Version>1.5.0.21</Version>
         <Configurations>Debug;Release</Configurations>
     </PropertyGroup>
 

@@ -99,6 +99,8 @@ public sealed class EmojiLoader : IDisposable
 
     private EmojiLoader()
     {
+        Client.DefaultRequestHeaders.Referrer = new("https://betterttv.com/");
+        Client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36");
         Initialize();
     }
 
