@@ -49,6 +49,13 @@
         <None Update="images\**">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
+        <!-- TildeTools -->
+        <!-- The store listing's own icon and screenshots are left out
+             The emoji, the loading frame and the error frame are read at runtime and stay -->
+        <None Update="images\icon.png;images\icon.psd;images\image1.png;images\image2.png;images\image3.png;images\image4.png">
+            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+        </None>
+        <!-- TildeTools ends -->
     </ItemGroup>
 
     <ItemGroup>

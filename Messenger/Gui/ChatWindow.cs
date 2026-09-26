@@ -6,6 +6,9 @@ using ECommons.Throttlers;
 using Lumina.Excel.Sheets;
 using Messenger.Configuration;
 using Messenger.Gui.Settings;
+// TildeTools
+using Messenger.Services;
+// TildeTools ends
 using Messenger.Gui.TitleButtons;
 
 namespace Messenger.Gui;
@@ -683,6 +686,30 @@ public unsafe class ChatWindow : Window
                 {
                     generic ??= MessageHistory.HistoryPlayer.IsGenericChannel();
                 }
+                // TildeTools
+                // The whole message, not trimmed, which may already be SplitMessage's first piece
+                // Mirrors SendDirectMessage: a channel window's subject is its command, /cwl1 or /fc
+                // Not tells in forays or to Party Finder contacts, which go through SendTellInForay and SendReplyViaAcq
+                // Those go by temporary channels sent with the message, so /tell parts may never arrive
+                // Any length, one that fits can carry a break marker
+                var whole = Input.SinglelineText.Trim();
+                var take = subject != null && whole.Length > 0 && !whole.StartsWith('/')
+                    && (generic.Value || !Utils.IsInForay() && !S.PartyFinderMonitor.CanSendMessage(subject))
+                    ? S.Splitter.TrySend(generic.Value ? $"/{subject} {whole}" : $"/tell {subject} {whole}")
+                    : SplitTake.NotTaken;
+                if(take == SplitTake.Queued)
+                {
+                    if(C.UseAutoSave) Utils.AutoSaveMessage(this, true);
+                    Input.SinglelineText = "";
+                    if(C.RefocusInputAfterSending) MessageHistory.SetFocusAtNextFrame();
+                    return true;
+                }
+
+                // The splitter has already said why in chat
+                if(take == SplitTake.Refused)
+                    return false;
+                // TildeTools ends
+
                 var bytes = Utils.GetLength(subject, trimmed);
                 if(trimmed.Length == 0)
                 {
@@ -778,6 +805,9 @@ public unsafe class ChatWindow : Window
         if(ImGui.BeginPopup($"MessageDetail{x.ID}"))
         {
             ImGui.PushStyleColor(ImGuiCol.Text, Cust.ColorGeneric);
+            // TildeTools
+            WordLookup.DrawDefine();
+            // TildeTools ends
             if(C.TranslationProvider != null)
             {
                 HashSet<string> t = [];

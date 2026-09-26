@@ -57,9 +57,17 @@ public unsafe class Messenger : IDalamudPlugin
             SingletonServiceManager.Initialize(typeof(S));
             GameFunctions = new();
             GuiSettings = new();
-            WindowSystemMain.AddWindow(GuiSettings);
+            // TildeTools
+            // Hosted, TildeTools draws it in its own window
+            if(!Hosting.IsHosted)
+                WindowSystemMain.AddWindow(GuiSettings);
+            // TildeTools ends
             Svc.PluginInterface.UiBuilder.Draw += WindowSystemMain.Draw;
-            Svc.PluginInterface.UiBuilder.OpenConfigUi += delegate { GuiSettings.IsOpen = true; };
+            // TildeTools
+            // Hosted, the installer's Settings button is TildeTools'
+            if(!Hosting.IsHosted)
+                Svc.PluginInterface.UiBuilder.OpenConfigUi += delegate { GuiSettings.IsOpen = true; };
+            // TildeTools ends
             Svc.Commands.AddHandler("/xim", new(OnCommand)
             {
                 HelpMessage = "open main control window\n/xim h|hide → temporarily hide/show all message windows\n/xim c|close → close all active windows and reset cascading positions\n/xim <partial player name> - attempt to open chat history with specified player",
@@ -88,6 +96,11 @@ public unsafe class Messenger : IDalamudPlugin
 
     public void ReapplyVisibilitySettings()
     {
+        // TildeTools
+        // Hosted, the UiBuilder is TildeTools', shared with Chat 2, which keeps Dalamud's hiding off and hides itself
+        if(Hosting.IsHosted)
+            return;
+        // TildeTools ends
         Svc.PluginInterface.UiBuilder.DisableGposeUiHide = C.UIShowGPose;
         Svc.PluginInterface.UiBuilder.DisableAutomaticUiHide = C.UIShowHidden;
         Svc.PluginInterface.UiBuilder.DisableCutsceneUiHide = C.UIShowCutscene;

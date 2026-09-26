@@ -76,6 +76,9 @@ public unsafe partial class PseudoMultilineInput
         ImGui.SetNextItemWidth(width);
         var ret = ImGui.InputText($"##{Label}", ref Text, MaxLength, ImGuiInputTextFlags.EnterReturnsTrue);
         IsInputActive = ImGui.IsItemActive();
+        // TildeTools
+        DrawSpelling();
+        // TildeTools ends
         if(ret)
         {
             EnterPress = ImGui.GetFrameCount();
@@ -94,6 +97,10 @@ public unsafe partial class PseudoMultilineInput
         ImGui.InputTextMultiline($"##{Label}", ref Text, MaxLength, new(width, lheight * cnt + ImGui.GetStyle().FramePadding.X * 2), ImGuiInputTextFlags.NoHorizontalScroll | ImGuiInputTextFlags.CallbackAlways | ImGuiInputTextFlags.CallbackCharFilter | ImGuiInputTextFlags.NoUndoRedo, Callback);
         if(SetFocusAt > -1) ImGui.SetKeyboardFocusHere(-1);
         IsInputActive = ImGui.IsItemActive();
+        // TildeTools
+        // Before the emoji popup, while the input is still the current item
+        DrawSpelling();
+        // TildeTools ends
         DrawEmojiPopup();
     }
 

@@ -16,7 +16,9 @@ public sealed class EmojiLoader : IDisposable
     private HashSet<string> PastEmojiSearchRequests = [];
     private ConcurrentQueue<string> EmojiSearchRequests = [];
     public volatile bool DownloaderTaskRunning = false;
-    private readonly string CachePath = Path.Combine(Svc.PluginInterface.ConfigDirectory.FullName, "BetterTTVCache");
+    // TildeTools
+    private readonly string CachePath = Path.Combine(Hosting.DataDirectory.FullName, "BetterTTVCache");
+    // TildeTools ends
 
     public ImageFile Loading = new(Path.Combine(Svc.PluginInterface.AssemblyLocation.DirectoryName, "images", "loading.gif"));
     public ImageFile Error = new(Path.Combine(Svc.PluginInterface.AssemblyLocation.DirectoryName, "images", "error.png"));
@@ -254,7 +256,11 @@ public sealed class EmojiLoader : IDisposable
             var defaultEmojiFolder = Path.Combine(Svc.PluginInterface.AssemblyLocation.Directory.FullName, "images", "emoji");
             foreach(var f in Directory.GetFiles(defaultEmojiFolder))
             {
-                PluginLog.Verbose($"Loading default emoji {f} exists={File.Exists(f)}");
+                // TildeTools
+                // No File.Exists: it ran even with Verbose filtered out
+                // 1712 files at 87 ms a pass, and the list loads twice at startup
+                PluginLog.Verbose($"Loading default emoji {f}");
+                // TildeTools ends
                 Emoji[Path.GetFileNameWithoutExtension(f)] = new(f);
             }
         }
@@ -274,11 +280,15 @@ public sealed class EmojiLoader : IDisposable
         {
             foreach(var x in C.StaticBetterTTVEmojiCache)
             {
-                Emoji[x.Key] = new(Path.Combine(Svc.PluginInterface.ConfigDirectory.FullName, "BetterTTVCache", x.Value));
+                // TildeTools
+                Emoji[x.Key] = new(Path.Combine(CachePath, x.Value));
+                // TildeTools ends
             }
             foreach(var x in C.DynamicBetterTTVEmojiCache)
             {
-                Emoji[x.Key] = new(Path.Combine(Svc.PluginInterface.ConfigDirectory.FullName, "BetterTTVCache", x.Value));
+                // TildeTools
+                Emoji[x.Key] = new(Path.Combine(CachePath, x.Value));
+                // TildeTools ends
             }
         }
         catch(Exception e)

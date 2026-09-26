@@ -16,6 +16,10 @@ public static class ServiceManager
     public static XIMModalWindow XIMModalWindow;
     public static EurekaMonitor EurekaMonitor;
     public static PartyFinderMonitor PartyFinderMonitor;
+    // TildeTools
+    public static Splitter Splitter;
+    public static SpellCheck SpellCheck;
+    // TildeTools ends
     public static LocalLibretranslateTranslator LocalLibretranslateTranslator;
     public static LibreTranslateRunner LibreTranslateRunner;
 }
