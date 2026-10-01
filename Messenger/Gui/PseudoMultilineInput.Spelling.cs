@@ -9,7 +9,7 @@ namespace Messenger.Gui;
 // Placed by measuring the text, since this box wraps with real newlines in its buffer.
 public unsafe partial class PseudoMultilineInput
 {
-    private static readonly Vector4 SpellColour = new(1f, 0.25f, 0.25f, 1f);
+    private static readonly Vector4 SpellColor = new(1f, 0.25f, 0.25f, 1f);
 
     private const float SpellDrop = 1.5f;
     private const float SpellThickness = 1.5f;
@@ -172,7 +172,7 @@ public unsafe partial class PseudoMultilineInput
 
         var (min, max) = (ImGui.GetItemRectMin(), ImGui.GetItemRectMax());
         var (lineHeight, thick) = (ImGui.GetTextLineHeight(), SpellThickness * ImGuiHelpers.GlobalScale);
-        var (drawList, colour) = (ImGui.GetWindowDrawList(), ImGui.GetColorU32(SpellColour));
+        var (drawList, color) = (ImGui.GetWindowDrawList(), ImGui.GetColorU32(SpellColor));
         var measured = MeasuredFor(misspellings);
 
         for(int lineStart = 0, lineIndex = 0; lineStart <= Text.Length; lineIndex++)
@@ -193,7 +193,7 @@ public unsafe partial class PseudoMultilineInput
                     var (from, to) = (Math.Max(origin.X + left, min.X), Math.Min(origin.X + left + width, max.X));
 
                     if(start >= lineStart && start + length <= lineEnd && !float.IsNaN(left) && to > from)
-                        drawList.AddLine(new Vector2(from, y), new Vector2(to, y), colour, thick);
+                        drawList.AddLine(new Vector2(from, y), new Vector2(to, y), color, thick);
                 }
 
             lineStart = lineEnd + 1;
