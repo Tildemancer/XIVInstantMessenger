@@ -24,8 +24,10 @@ internal class GuiSettings : Window
 
     public override void Draw()
     {
-        PatreonBanner.DrawRight();
-        ImGuiEx.EzTabBar("MessengerBar", PatreonBanner.Text,
+        // TildeTools
+        // NightmareXIV's Patreon banner moved to TT's Credits tab, same old same old...
+        ImGuiEx.EzTabBar("MessengerBar", null,
+        // TildeTools ends
             ("History", TabHistory.Draw, null, true),
             ("Engagements", TabEngagement.Draw, null, true),
             ("Settings", TabSettings.Draw, null, true),
@@ -33,7 +35,11 @@ internal class GuiSettings : Window
             ("Fonts", TabFonts.Draw, null, true),
             ("Recent", TabRecent.Draw, null, true),
             ("Generic channels", TabIndividual.Draw, null, true),
-            ("Translation", TabTranslation.Draw, null, true),
+            // TildeTools
+            // A null name makes EzTabBar skip the tab.
+            // Hosted, EzIPC's prefix is TT's, so no translator would answer.
+            (Hosting.IsHosted ? null : "Translation", TabTranslation.Draw, null, true),
+            // TildeTools ends
             ("Log", InternalLog.PrintImgui, ImGuiColors.DalamudGrey3, false),
             ("Debug", TabDebug.Draw, ImGuiColors.DalamudGrey3, true)
             );

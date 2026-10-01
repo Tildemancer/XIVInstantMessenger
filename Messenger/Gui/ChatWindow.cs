@@ -6,6 +6,9 @@ using ECommons.Throttlers;
 using Lumina.Excel.Sheets;
 using Messenger.Configuration;
 using Messenger.Gui.Settings;
+// TildeTools
+using Messenger.Services;
+// TildeTools ends
 using Messenger.Gui.TitleButtons;
 
 namespace Messenger.Gui;
@@ -182,6 +185,42 @@ public unsafe class ChatWindow : Window
         }
         P.FontManager.PushFont();
     }
+
+    // TildeTools
+    // A line the Emote Splitter takes goes out in its parts on one press, so XIM's own split preview and red bar would be wrong for it.
+    // Asked again only when the text, window or splitter change.
+    // The text by value, since the input hands back a new string every frame.
+    private (string Text, string Subject, int Generation, bool Takes) Taken;
+
+    private bool TakenBySplitter(string subject)
+    {
+        if(MessageHistory == null || subject == null)
+            return false;
+        var text = Input.SinglelineText;
+        if(Taken.Text == text && Taken.Subject == subject && Taken.Generation == S.Splitter.Generation)
+            return Taken.Takes;
+        var (current, max) = Utils.GetLength(subject, text);
+        var generic = MessageHistory.IsEngagement
+            ? MessageHistory.HistoryPlayer.GetEngagementInfo().DefaultTarget?.IsGenericChannel() ?? false
+            : MessageHistory.HistoryPlayer.IsGenericChannel();
+        var takes = current > max && OfferedLine(subject, generic) is { } line && S.Splitter.Parts(line).Count > 1;
+        Taken = (text, subject, S.Splitter.Generation, takes);
+        return takes;
+    }
+
+    // Reads Input.SinglelineText, since the message may already be SplitMessage's first piece.
+    // Like SendDirectMessage, a channel window's subject is its command (/cwl1 or /fc).
+    // Foray and Party Finder tells aren't offered, since upstream sends them via SendTellInForay and SendReplyViaAcq.
+    // Their temp channel is set per message, so split /tell parts may not arrive.
+    private string OfferedLine(string subject, bool generic)
+    {
+        var whole = Input.SinglelineText.Trim();
+        return subject != null && whole.Length > 0 && !whole.StartsWith('/')
+            && (generic || !Utils.IsInForay() && !S.PartyFinderMonitor.CanSendMessage(subject))
+            ? generic ? $"/{subject} {whole}" : $"/tell {subject} {whole}"
+            : null;
+    }
+    // TildeTools ends
 
     public override void Draw()
     {
@@ -386,7 +425,10 @@ public unsafe class ChatWindow : Window
             }
             string firstMessage = null;
             string remainder = null;
-            var split = C.SplitterEnable ? Utils.SplitMessage(Input.SinglelineText, tellTarget, out firstMessage, out remainder) : null;
+            // TildeTools
+            var takenBySplitter = TakenBySplitter(tellTarget);
+            var split = C.SplitterEnable && !takenBySplitter ? Utils.SplitMessage(Input.SinglelineText, tellTarget, out firstMessage, out remainder) : null;
+            // TildeTools ends
             var isSplit = split != null && split.Count > 1 && firstMessage != null && remainder != null;
             if(Input.EnterWasPressed() && EzThrottler.Check("SendMessage"))
             {
@@ -509,6 +551,10 @@ public unsafe class ChatWindow : Window
 
                 var bytes = Utils.GetLength(tellTarget, Input.SinglelineText);
                 var fraction = (float)bytes.current / (float)bytes.max;
+                // TildeTools
+                if(takenBySplitter)
+                    fraction = Math.Min(fraction, 1f);
+                // TildeTools ends
                 ImGui.PushStyleColor(ImGuiCol.PlotHistogram, fraction > 1f ? ImGuiColors.DalamudRed : Cust.ColorGeneric);
                 ImGui.ProgressBar(fraction, new Vector2(ImGui.GetContentRegionAvail().X, 3f), "");
                 ImGui.PopStyleColor();
@@ -683,6 +729,22 @@ public unsafe class ChatWindow : Window
                 {
                     generic ??= MessageHistory.HistoryPlayer.IsGenericChannel();
                 }
+                // TildeTools
+                // Offered at any length, since a line that fits can still carry a break marker via |n.
+                var take = OfferedLine(subject, generic.Value) is { } offered ? S.Splitter.TrySend(offered) : SplitTake.NotTaken;
+                if(take == SplitTake.Queued)
+                {
+                    if(C.UseAutoSave) Utils.AutoSaveMessage(this, true);
+                    Input.SinglelineText = "";
+                    if(C.RefocusInputAfterSending) MessageHistory.SetFocusAtNextFrame();
+                    return true;
+                }
+
+                // The splitter refused and should already have said why, so the text stays.
+                if(take == SplitTake.Refused)
+                    return false;
+                // TildeTools ends
+
                 var bytes = Utils.GetLength(subject, trimmed);
                 if(trimmed.Length == 0)
                 {
@@ -778,6 +840,9 @@ public unsafe class ChatWindow : Window
         if(ImGui.BeginPopup($"MessageDetail{x.ID}"))
         {
             ImGui.PushStyleColor(ImGuiCol.Text, Cust.ColorGeneric);
+            // TildeTools
+            WordLookup.DrawDefine();
+            // TildeTools ends
             if(C.TranslationProvider != null)
             {
                 HashSet<string> t = [];

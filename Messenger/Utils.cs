@@ -478,6 +478,9 @@ internal static unsafe partial class Utils
                         if(WrapSymbols.Contains(s[z]) && start != z)
                         {
                             ImGuiEx.Text(s[start..z]);
+                            // TildeTools
+                            Gui.WordLookup.Watch(s, start, z);
+                            // TildeTools ends
                             postMessageFunctions?.Invoke();
                             canRestart = false;
                             start = z;
@@ -497,6 +500,9 @@ internal static unsafe partial class Utils
                             //just wrap it
                             //PluginLog.Information($"Just wrap, max:{max}, avail: {avail}, start:{start}, i:{i}, str:{s[start..i]}");
                             ImGuiEx.Text(s[start..i]);
+                            // TildeTools
+                            Gui.WordLookup.Watch(s, start, i);
+                            // TildeTools ends
                             postMessageFunctions?.Invoke();
                             start = i;
                         }
@@ -506,6 +512,9 @@ internal static unsafe partial class Utils
             if(start < s.Length)
             {
                 ImGuiEx.Text(s[start..]);
+                // TildeTools
+                Gui.WordLookup.Watch(s, start, s.Length);
+                // TildeTools ends
                 postMessageFunctions?.Invoke();
             }
         }
@@ -792,7 +801,9 @@ internal static unsafe partial class Utils
 
     public static string GetLogStorageFolder()
     {
-        var baseFolder = C.LogStorageFolder.IsNullOrEmpty() ? Svc.PluginInterface.GetPluginConfigDirectory() : C.LogStorageFolder;
+        // TildeTools
+        var baseFolder = C.LogStorageFolder.IsNullOrEmpty() ? Hosting.DataDirectory.FullName : C.LogStorageFolder;
+        // TildeTools ends
         if(C.SplitLogging && P.CurrentPlayer != null && !C.SplitBlacklist.Contains(P.CurrentPlayer))
         {
             baseFolder = Path.Combine(baseFolder, P.CurrentPlayer);
