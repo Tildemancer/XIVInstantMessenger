@@ -1,6 +1,7 @@
 // TildeTools: written for this fork, not part of upstream Messenger.
 
 using Dalamud.Plugin.Ipc;
+using Dalamud.Plugin.Ipc.Exceptions;
 
 namespace Messenger.Services;
 
@@ -61,8 +62,9 @@ public sealed class SpellCheck : IDisposable
             for(var i = 0; i + 1 < flat.Count; i += 2)
                 result.Add(new Misspelling(flat[i], flat[i + 1]));
         }
-        catch
+        catch (Exception ex)
         {
+            Failed(ex);
             IsAvailable = false;
         }
 
@@ -80,13 +82,26 @@ public sealed class SpellCheck : IDisposable
         {
             return DrawMenuGate.InvokeFunc(id, word, misspelled, use);
         }
-        catch
+        catch (Exception ex)
         {
+            Failed(ex);
             return true;
         }
     }
 
     public void Define(string word) => Try(() => DefineGate.InvokeFunc(word), false);
+
+    // Not ready is TT's Spelling being off or TT unloading, anything else is logged, once.
+    private static bool _failed;
+
+    private static void Failed(Exception ex)
+    {
+        if (ex is IpcNotReadyError || _failed)
+            return;
+
+        _failed = true;
+        PluginLog.Warning($"A TildeTools spellcheck gate already failed. {ex}");
+    }
 
     // Gates throw while TT unloads or their module is off.
     internal static T Try<T>(Func<T> call, T failed)
@@ -95,8 +110,9 @@ public sealed class SpellCheck : IDisposable
         {
             return call();
         }
-        catch
+        catch (Exception ex)
         {
+            Failed(ex);
             return failed;
         }
     }
