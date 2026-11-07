@@ -1,4 +1,7 @@
 ﻿using Dalamud.Interface.Components;
+// TildeTools
+using Dalamud.Interface.Utility.Raii;
+// TildeTools ends
 
 namespace Messenger.Gui.Settings;
 
@@ -99,11 +102,14 @@ internal class TabStyle
         ImGui.Checkbox("Target the player", ref C.ButtonTargetPlayer);
         ImGui.Separator();
         ImGui.Checkbox("Enable multiline message input", ref C.PMLEnable);
-        ImGui.Indent();
-        ImGui.SetNextItemWidth(100f);
-        ImGuiEx.SliderInt("Maximum lines", ref C.PMLMaxLines.ValidateRange(1, 30), 1, 10);
-        ImGui.Checkbox("Keep history scrolled down when typing reply", ref C.PMLScrollDown);
-        ImGui.Unindent();
+        // TildeTools
+        using(ImRaii.PushIndent())
+        {
+            ImGui.SetNextItemWidth(100f);
+            ImGuiEx.SliderInt("Maximum lines", ref C.PMLMaxLines.ValidateRange(1, 30), 1, 10);
+            ImGui.Checkbox("Keep history scrolled down when typing reply", ref C.PMLScrollDown);
+        }
+        // TildeTools ends
         ImGui.Separator();
         ImGui.SetNextItemWidth(100f);
         ImGuiEx.SliderInt($"Newline spacing", ref C.MessageLineSpacing, -5, 5);
