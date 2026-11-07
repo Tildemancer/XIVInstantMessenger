@@ -8,6 +8,9 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+// TildeTools
+using Dalamud.Interface.Utility.Raii;
+// TildeTools ends
 
 namespace Messenger.Services.Translation;
 /// <summary>
@@ -88,7 +91,9 @@ public sealed unsafe class LocalLibretranslateTranslator
             }
         }).Draw();
         ImGui.SetNextItemWidth(150f.Scale());
-        if(ImGui.BeginCombo("Select language to translate to", LibreTranslationUtils.Languages.FindKeysByValue(C.LibreTarget).FirstOrDefault() ?? "- Not Selected -"))
+        // TildeTools
+        using(var combo = ImRaii.Combo("Select language to translate to", LibreTranslationUtils.Languages.FindKeysByValue(C.LibreTarget).FirstOrDefault() ?? "- Not Selected -")) if(combo)
+        // TildeTools ends
         {
             foreach(var x in LibreTranslationUtils.Languages)
             {
@@ -97,7 +102,7 @@ public sealed unsafe class LocalLibretranslateTranslator
                     C.LibreTarget = x.Value;
                 }
             }
-            ImGui.EndCombo();
+            // TildeTools: EndCombo removed, the using ends it
         }
     }
 }
