@@ -866,9 +866,10 @@ public unsafe class ChatWindow : Window
                 if(s.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
                     || s.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
                 {
-                    ImGui.PushStyleColor(ImGuiCol.Text, Cust.ColorGeneric);
-                    ImGuiEx.SetTooltip($"Link found:\n{s}\nClick to open");
-                    ImGui.PopStyleColor();
+                    // TildeTools
+                    using(ImRaii.PushColor(ImGuiCol.Text, Cust.ColorGeneric))
+                        ImGuiEx.SetTooltip($"Link found:\n{s}\nClick to open");
+                    // TildeTools ends
                     ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
                     if(ImGui.IsItemClicked(ImGuiMouseButton.Left))
                     {
@@ -886,10 +887,13 @@ public unsafe class ChatWindow : Window
 
     private void PostMessageFunctions(SavedMessage x)
     {
-        if(ImGui.BeginPopup($"MessageDetail{x.ID}"))
+        // TildeTools
+        using(var popup = ImRaii.Popup($"MessageDetail{x.ID}")) if(popup)
+        // TildeTools ends
         {
-            ImGui.PushStyleColor(ImGuiCol.Text, Cust.ColorGeneric);
             // TildeTools
+            // Popped before the popup ends
+            using var color = ImRaii.PushColor(ImGuiCol.Text, Cust.ColorGeneric);
             WordLookup.DrawDefine();
             // TildeTools ends
             if(C.TranslationProvider != null)
@@ -981,8 +985,7 @@ public unsafe class ChatWindow : Window
                     });
                 }
             }
-            ImGui.EndPopup();
-            ImGui.PopStyleColor();
+            // TildeTools: EndPopup and PopStyleColor removed, the usings end them
         }
     }
 
