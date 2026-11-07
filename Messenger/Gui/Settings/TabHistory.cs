@@ -4,6 +4,9 @@ using Messenger.Configuration;
 using System.IO;
 using static Dalamud.Interface.Utility.Raii.ImRaii;
 using HistoryData = (Messenger.Configuration.Sender Name, string State, long LastMessage, bool Grey);
+// TildeTools
+using Dalamud.Interface.Utility.Raii;
+// TildeTools ends
 
 namespace Messenger.Gui.Settings;
 
@@ -123,11 +126,18 @@ public sealed unsafe class TabHistory
                             if(sortData.SortColumn == 2) combine = [.. (sortData.RequestedSortDirection == ImGuiSortDirection.Ascending ? combine.OrderBy(x => x.LastMessage) : combine.OrderByDescending(x => x.LastMessage))];
                         }
                     }
+                    // TildeTools
+                    using var color = new ImRaii.ColorDisposable();
+                    // TildeTools ends
                     foreach(var x in combine)
                     {
-                        if(x.Grey) ImGui.PushStyleColor(ImGuiCol.Text, ImGuiColors.DalamudGrey2);
+                        // TildeTools
+                        color.Push(ImGuiCol.Text, ImGuiColors.DalamudGrey2, x.Grey);
+                        // TildeTools ends
                         DrawRow(x);
-                        if(x.Grey) ImGui.PopStyleColor();
+                        // TildeTools
+                        color.Pop();
+                        // TildeTools ends
                     }
                     ImGui.EndTable();
                 }
