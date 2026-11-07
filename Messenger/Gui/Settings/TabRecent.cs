@@ -1,4 +1,7 @@
-﻿namespace Messenger.Gui.Settings;
+﻿// TildeTools
+using Dalamud.Interface.Utility.Raii;
+// TildeTools ends
+namespace Messenger.Gui.Settings;
 public class TabRecent
 {
     public static void Draw()
@@ -10,7 +13,9 @@ public class TabRecent
         }
         else
         {
-            if(ImGui.BeginTable("##autosave", 5, ImGuiTableFlags.RowBg | ImGuiTableFlags.NoSavedSettings | ImGuiTableFlags.Borders | ImGuiTableFlags.SizingFixedFit))
+            // TildeTools
+            using(var table = ImRaii.Table("##autosave", 5, ImGuiTableFlags.RowBg | ImGuiTableFlags.NoSavedSettings | ImGuiTableFlags.Borders | ImGuiTableFlags.SizingFixedFit)) if(table)
+            // TildeTools ends
             {
                 ImGui.TableSetupColumn("Recipient");
                 ImGui.TableSetupColumn("When");
@@ -19,10 +24,15 @@ public class TabRecent
                 ImGui.TableSetupColumn("##control");
                 ImGui.TableHeadersRow();
 
+                // TildeTools
+                using var id = new ImRaii.IdDisposable();
+                // TildeTools ends
                 var i = 0;
                 foreach(var x in C.AutoSavedMessages)
                 {
-                    ImGui.PushID($"Msg{i++}");
+                    // TildeTools
+                    id.Push($"Msg{i++}");
+                    // TildeTools ends
                     ImGui.TableNextRow();
                     ImGui.TableNextColumn();
                     ImGuiEx.TextV(x.Target.GetChannelName());
@@ -61,10 +71,12 @@ public class TabRecent
                     {
                         new TickScheduler(() => C.AutoSavedMessages.Remove(x));
                     }
-                    ImGui.PopID();
+                    // TildeTools
+                    id.Pop();
+                    // TildeTools ends
                 }
 
-                ImGui.EndTable();
+                // TildeTools: EndTable removed, the using ends it
             }
         }
     }
