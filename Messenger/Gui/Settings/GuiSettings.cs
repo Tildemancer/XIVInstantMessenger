@@ -41,7 +41,10 @@ internal class GuiSettings : Window
             (Hosting.IsHosted ? null : "Translation", TabTranslation.Draw, null, true),
             // TildeTools ends
             ("Log", InternalLog.PrintImgui, ImGuiColors.DalamudGrey3, false),
-            ("Debug", TabDebug.Draw, ImGuiColors.DalamudGrey3, true)
+            // TildeTools
+            // Hosted, no Debug tab, since its Fire event button builds Dalamud's internal ChatMessage by reflection
+            (Hosting.IsHosted ? null : "Debug", TabDebug.Draw, ImGuiColors.DalamudGrey3, true)
+            // TildeTools ends
             );
     }
 
