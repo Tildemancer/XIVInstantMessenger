@@ -1,5 +1,8 @@
 ﻿using FFXIVClientStructs.FFXIV.Component.GUI;
 using Messenger.Configuration;
+// TildeTools
+using Dalamud.Interface.Utility.Raii;
+// TildeTools ends
 
 namespace Messenger.Gui;
 
@@ -42,13 +45,18 @@ internal unsafe class QuickButton : Window
         {
             CImGui.igBringWindowToDisplayFront(CImGui.igGetCurrentWindow());
         }
-        ImGui.PushStyleColor(ImGuiCol.Button, Vector4.Zero);
-        ImGui.PushStyleColor(ImGuiCol.ButtonActive, Vector4.Zero);
-        ImGui.PushStyleColor(ImGuiCol.ButtonHovered, Vector4.Zero);
+        // TildeTools
+        using var color = new ImRaii.ColorDisposable();
+        color.Push(ImGuiCol.Button, Vector4.Zero);
+        color.Push(ImGuiCol.ButtonActive, Vector4.Zero);
+        color.Push(ImGuiCol.ButtonHovered, Vector4.Zero);
+        // TildeTools ends
         var col = false;
         if(P.Hidden)
         {
-            ImGui.PushStyleColor(ImGuiCol.Text, ImGuiCol.Text.GetFlashColor(C.DefaultChannelCustomization));
+            // TildeTools
+            color.Push(ImGuiCol.Text, ImGuiCol.Text.GetFlashColor(C.DefaultChannelCustomization));
+            // TildeTools ends
             col = true;
         }
         if(ImGuiEx.IconButton(FontAwesomeIcon.MailBulk))
@@ -57,12 +65,20 @@ internal unsafe class QuickButton : Window
         }
         if(col)
         {
-            ImGui.PopStyleColor();
+            // TildeTools
+            color.Pop();
+            // TildeTools ends
         }
-        ImGui.PopStyleColor(3);
-        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(7, 7));
-        if(ImGui.BeginPopup("Select target"))
+        // TildeTools
+        color.Pop(3);
+        using var padding = ImRaii.PushStyle(ImGuiStyleVar.WindowPadding, new Vector2(7, 7));
+        using(var popup = ImRaii.Popup("Select target")) if(popup)
+        // TildeTools ends
         {
+            // TildeTools
+            // Its own color object, so a throw pops these before the popup ends
+            using var textColor = new ImRaii.ColorDisposable();
+            // TildeTools ends
             if(S.MessageProcessor.Chats.Count == 0)
             {
                 ImGuiEx.Text("There is nothing here yet...");
@@ -93,12 +109,16 @@ internal unsafe class QuickButton : Window
                         }
                     }
                     ImGui.SameLine(0, 0);
-                    ImGui.PushStyleColor(ImGuiCol.Text, ImGuiColors.DalamudRed);
+                    // TildeTools
+                    textColor.Push(ImGuiCol.Text, ImGuiColors.DalamudRed);
+                    // TildeTools ends
                     if(ImGui.Selectable($"   ##{x.Key.GetChannelName()}", false, ImGuiSelectableFlags.DontClosePopups))
                     {
                         toRem = x.Key;
                     }
-                    ImGui.PopStyleColor();
+                    // TildeTools
+                    textColor.Pop();
+                    // TildeTools ends
                 }
                 if(toRem != null)
                 {
@@ -106,9 +126,9 @@ internal unsafe class QuickButton : Window
                     toRem = null;
                 }
             }
-            ImGui.EndPopup();
+            // TildeTools: EndPopup removed, the using ends it
         }
-        ImGui.PopStyleVar();
+        // TildeTools: PopStyleVar removed, the using pops it
     }
 
     public override void PostDraw()
