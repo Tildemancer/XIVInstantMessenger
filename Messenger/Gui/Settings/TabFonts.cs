@@ -1,6 +1,9 @@
 ﻿using Dalamud.Interface.Components;
 using Dalamud.Interface.FontIdentifier;
 using Dalamud.Interface.ImGuiFontChooserDialog;
+// TildeTools
+using Dalamud.Interface.Utility.Raii;
+// TildeTools ends
 
 namespace Messenger.Gui.Settings;
 
@@ -31,7 +34,9 @@ internal class TabFonts
         }
         ImGui.Separator();
         var col = Changed;
-        if(col) ImGui.PushStyleColor(ImGuiCol.Text, GradientColor.Get(ImGuiColors.DalamudYellow, ImGuiColors.DalamudRed));
+        // TildeTools
+        using var color = ImRaii.PushColor(ImGuiCol.Text, GradientColor.Get(ImGuiColors.DalamudYellow, ImGuiColors.DalamudRed), col);
+        // TildeTools ends
         if(ImGuiComponents.IconButtonWithText(FontAwesomeIcon.Check, "Apply Settings"))
         {
             _ = new TickScheduler(() =>
@@ -41,7 +46,7 @@ internal class TabFonts
             });
             Changed = false;
         }
-        if(col) ImGui.PopStyleColor();
+        // TildeTools: PopStyleColor removed, the using pops it at the end of Draw
     }
 
     private void DisplayFontSelector()
