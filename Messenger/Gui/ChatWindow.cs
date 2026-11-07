@@ -7,6 +7,7 @@ using ECommons.Throttlers;
 using Messenger.Configuration;
 using Messenger.Gui.Settings;
 // TildeTools
+using Dalamud.Interface.Utility.Raii;
 using Messenger.Services;
 // TildeTools ends
 using Messenger.Gui.TitleButtons;
@@ -281,125 +282,162 @@ public unsafe class ChatWindow : Window
             }
             var subjectNoWorld = MessageHistory.HistoryPlayer.GetPlayerName().Split("@")[0];
             var me = Svc.ClientState.LocalPlayer?.Name.ToString().Split("@")[0] ?? "Me";
-            ImGui.BeginChild($"##ChatChild{subject}", new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetContentRegionAvail().Y - fieldHeight));
-            if(MessageHistory.Messages.Count == 0)
+            // TildeTools
+            // Upstream's child lines are indented into the using block. The child's result stays unchecked, as upstream's was,
+            // since the body also merges the loaded log and counts down the scroll
+            using(ImRaii.Child($"##ChatChild{subject}", new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetContentRegionAvail().Y - fieldHeight)))
             {
-                Utils.DrawWrappedText($"This is the beginning of your chat with {subject}");
-            }
-            bool? isIncoming = null;
-            if(MessageHistory.LogLoaded && MessageHistory.LoadedMessages.Count > 0)
-            {
-                foreach(var message in MessageHistory.LoadedMessages)
+                // Its own color object, so a throw pops these before the child ends
+                using var textColor = new ImRaii.ColorDisposable();
+            // TildeTools ends
+                if(MessageHistory.Messages.Count == 0)
                 {
-                    MessageHistory.Messages.Insert(0, message);
+                    Utils.DrawWrappedText($"This is the beginning of your chat with {subject}");
                 }
-                MessageHistory.Scroll();
-                MessageHistory.LoadedMessages.Clear();
-            }
-            (int year, int day) currentDay = (0, 0);
-            ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Vector2(0, C.MessageLineSpacing));
-            var startIndex = Math.Max(0, MessageHistory.Messages.Count - DisplayCap);
-            if(startIndex != 0)
-            {
-                ImGuiEx.TextWrapped(EColor.OrangeBright, $"For performance reasons, {startIndex} messages have been hidden.");
-                if(ImGui.Button($"Display {Math.Min(startIndex, C.DisplayedMessages)} more messages"))
+                bool? isIncoming = null;
+                if(MessageHistory.LogLoaded && MessageHistory.LoadedMessages.Count > 0)
                 {
-                    Svc.Framework.RunOnTick(() => ScrollToMessage = startIndex, delayTicks: 1);
-                    DisplayCap += C.DisplayedMessages;
-                }
-            }
-            for(var n = startIndex; n < MessageHistory.Messages.Count; n++)
-            {
-                var message = MessageHistory.Messages[n];
-                if(message.IsSystem)
-                {
-                    ImGui.PushStyleColor(ImGuiCol.Text, Cust.ColorGeneric);
-                    message.Draw();
-                    ImGui.PopStyleColor();
-                }
-                else
-                {
-                    if(!message.IsIncoming && Cust.NoOutgoing) continue;
-                    var time = DateTimeOffset.FromUnixTimeMilliseconds(message.Time).ToLocalTime();
-                    if(C.PrintDate)
+                    foreach(var message in MessageHistory.LoadedMessages)
                     {
-                        if(!(time.DayOfYear == currentDay.day && time.Year == currentDay.year))
-                        {
-                            ImGuiEx.Text(Cust.ColorGeneric, $"[{time.ToString(C.DateFormat)}]");
-                            if(C.MessageSpacing > 0) ImGui.Dummy(new(C.MessageSpacing));
-                            currentDay = (time.Year, time.DayOfYear);
-                        }
+                        MessageHistory.Messages.Insert(0, message);
                     }
-                    var timestamp = time.ToString(C.MessageTimestampFormat);
-                    if(C.IRCStyle)
+                    MessageHistory.Scroll();
+                    MessageHistory.LoadedMessages.Clear();
+                }
+                (int year, int day) currentDay = (0, 0);
+                // TildeTools
+                using var spacing = ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, new Vector2(0, C.MessageLineSpacing));
+                // TildeTools ends
+                var startIndex = Math.Max(0, MessageHistory.Messages.Count - DisplayCap);
+                if(startIndex != 0)
+                {
+                    ImGuiEx.TextWrapped(EColor.OrangeBright, $"For performance reasons, {startIndex} messages have been hidden.");
+                    if(ImGui.Button($"Display {Math.Min(startIndex, C.DisplayedMessages)} more messages"))
                     {
-                        var messageColor = message.IsIncoming ? Cust.ColorFromMessage : Cust.ColorToMessage;
-                        var subjectColor = message.IsIncoming ? Cust.ColorFromTitle : Cust.ColorToTitle;
-                        ImGuiEx.Text(Cust.ColorGeneric, $"{timestamp} ");
-                        ImGui.SameLine(0, 0);
-                        if(message.XivChatType != XivChatType.CustomEmote)
-                        {
-                            ImGuiEx.Text(messageColor, $"[");
-                            ImGui.SameLine(0, 0);
-                        }
-                        ImGuiEx.Text(subjectColor, $"{message.OverrideName?.Split("@")[0] ?? (message.IsIncoming ? subjectNoWorld : me)}");
-                        ImGui.SameLine(0, 0);
-                        if(message.XivChatType != XivChatType.CustomEmote)
-                        {
-                            ImGuiEx.Text(messageColor, $"] ");
-                            ImGui.SameLine(0, 0);
-                        }
-                        ImGui.PushStyleColor(ImGuiCol.Text, messageColor);
-                        message.Draw("", "", () => PostMessageFunctionsShared(message));
-                        PostMessageFunctions(message);
-                        ImGui.PopStyleColor();
+                        Svc.Framework.RunOnTick(() => ScrollToMessage = startIndex, delayTicks: 1);
+                        DisplayCap += C.DisplayedMessages;
+                    }
+                }
+                for(var n = startIndex; n < MessageHistory.Messages.Count; n++)
+                {
+                    var message = MessageHistory.Messages[n];
+                    if(message.IsSystem)
+                    {
+                        // TildeTools
+                        textColor.Push(ImGuiCol.Text, Cust.ColorGeneric);
+                        // TildeTools ends
+                        message.Draw();
+                        // TildeTools
+                        textColor.Pop();
+                        // TildeTools ends
                     }
                     else
                     {
-                        if(message.IsIncoming != isIncoming)
+                        if(!message.IsIncoming && Cust.NoOutgoing) continue;
+                        var time = DateTimeOffset.FromUnixTimeMilliseconds(message.Time).ToLocalTime();
+                        if(C.PrintDate)
                         {
-                            isIncoming = message.IsIncoming;
-                            if(message.IsIncoming)
+                            if(!(time.DayOfYear == currentDay.day && time.Year == currentDay.year))
                             {
-                                ImGui.PushStyleColor(ImGuiCol.Text, Cust.ColorFromTitle);
-                                Utils.DrawWrappedText($"From {message.OverrideName?.Split("@")[0] ?? subjectNoWorld}");
-                                ImGui.PopStyleColor();
-                            }
-                            else
-                            {
-                                ImGui.PushStyleColor(ImGuiCol.Text, Cust.ColorToTitle);
-                                Utils.DrawWrappedText($"From {message.OverrideName?.Split("@")[0] ?? me}");
-                                ImGui.PopStyleColor();
+                                ImGuiEx.Text(Cust.ColorGeneric, $"[{time.ToString(C.DateFormat)}]");
+                                if(C.MessageSpacing > 0) ImGui.Dummy(new(C.MessageSpacing));
+                                currentDay = (time.Year, time.DayOfYear);
                             }
                         }
-                        ImGuiHelpers.ScaledDummy(new Vector2(20f, 1f));
-                        ImGui.SameLine(0, 0);
-                        ImGui.PushStyleColor(ImGuiCol.Text, message.IsIncoming ? Cust.ColorFromMessage : Cust.ColorToMessage);
-                        message.Draw("[{timestamp}] ", "", () => PostMessageFunctionsShared(message));
-                        PostMessageFunctions(message);
-                        ImGui.PopStyleColor();
+                        var timestamp = time.ToString(C.MessageTimestampFormat);
+                        if(C.IRCStyle)
+                        {
+                            var messageColor = message.IsIncoming ? Cust.ColorFromMessage : Cust.ColorToMessage;
+                            var subjectColor = message.IsIncoming ? Cust.ColorFromTitle : Cust.ColorToTitle;
+                            ImGuiEx.Text(Cust.ColorGeneric, $"{timestamp} ");
+                            ImGui.SameLine(0, 0);
+                            if(message.XivChatType != XivChatType.CustomEmote)
+                            {
+                                ImGuiEx.Text(messageColor, $"[");
+                                ImGui.SameLine(0, 0);
+                            }
+                            ImGuiEx.Text(subjectColor, $"{message.OverrideName?.Split("@")[0] ?? (message.IsIncoming ? subjectNoWorld : me)}");
+                            ImGui.SameLine(0, 0);
+                            if(message.XivChatType != XivChatType.CustomEmote)
+                            {
+                                ImGuiEx.Text(messageColor, $"] ");
+                                ImGui.SameLine(0, 0);
+                            }
+                            // TildeTools
+                            textColor.Push(ImGuiCol.Text, messageColor);
+                            // TildeTools ends
+                            message.Draw("", "", () => PostMessageFunctionsShared(message));
+                            PostMessageFunctions(message);
+                            // TildeTools
+                            textColor.Pop();
+                            // TildeTools ends
+                        }
+                        else
+                        {
+                            if(message.IsIncoming != isIncoming)
+                            {
+                                isIncoming = message.IsIncoming;
+                                if(message.IsIncoming)
+                                {
+                                    // TildeTools
+                                    textColor.Push(ImGuiCol.Text, Cust.ColorFromTitle);
+                                    // TildeTools ends
+                                    Utils.DrawWrappedText($"From {message.OverrideName?.Split("@")[0] ?? subjectNoWorld}");
+                                    // TildeTools
+                                    textColor.Pop();
+                                    // TildeTools ends
+                                }
+                                else
+                                {
+                                    // TildeTools
+                                    textColor.Push(ImGuiCol.Text, Cust.ColorToTitle);
+                                    // TildeTools ends
+                                    Utils.DrawWrappedText($"From {message.OverrideName?.Split("@")[0] ?? me}");
+                                    // TildeTools
+                                    textColor.Pop();
+                                    // TildeTools ends
+                                }
+                            }
+                            ImGuiHelpers.ScaledDummy(new Vector2(20f, 1f));
+                            ImGui.SameLine(0, 0);
+                            // TildeTools
+                            textColor.Push(ImGuiCol.Text, message.IsIncoming ? Cust.ColorFromMessage : Cust.ColorToMessage);
+                            // TildeTools ends
+                            message.Draw("[{timestamp}] ", "", () => PostMessageFunctionsShared(message));
+                            PostMessageFunctions(message);
+                            // TildeTools
+                            textColor.Pop();
+                            // TildeTools ends
+                        }
                     }
-                }
 
-                if(ScrollToMessage == n)
-                {
-                    PluginLog.Verbose($"Set scroll to {n}");
-                    ImGui.SetScrollHereY();
-                    ScrollToMessage = -1;
+                    if(ScrollToMessage == n)
+                    {
+                        PluginLog.Verbose($"Set scroll to {n}");
+                        ImGui.SetScrollHereY();
+                        ScrollToMessage = -1;
+                    }
+                    if(C.MessageSpacing > 0) ImGui.Dummy(new(C.MessageSpacing));
                 }
-                if(C.MessageSpacing > 0) ImGui.Dummy(new(C.MessageSpacing));
+                // TildeTools
+                // Popped before the scroll calls, which read ItemSpacing
+                spacing.Pop();
+                // TildeTools ends
+                if(MessageHistory.DoScroll > 0)
+                {
+                    MessageHistory.DoScroll--;
+                    ImGui.SetScrollHereY();
+                }
+                if(C.PMLScrollDown && C.PMLEnable && Input.IsInputActive)
+                {
+                    ImGui.SetScrollHereY();
+                }
+            // TildeTools
             }
-            ImGui.PopStyleVar();
-            if(MessageHistory.DoScroll > 0)
-            {
-                MessageHistory.DoScroll--;
-                ImGui.SetScrollHereY();
-            }
-            if(C.PMLScrollDown && C.PMLEnable && Input.IsInputActive)
-            {
-                ImGui.SetScrollHereY();
-            }
-            ImGui.EndChild();
+
+            using var color = new ImRaii.ColorDisposable();
+            using var font = new ImRaii.FontDisposable();
+            // TildeTools ends
             var isCmd = C.CommandPassthrough && Input.SinglelineText.Trim().StartsWith("/");
             var cursor = ImGui.GetCursorPosY();
             //ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X - afterInputWidth);
@@ -408,7 +446,9 @@ public unsafe class ChatWindow : Window
             if(isCmd)
             {
                 inputCol = true;
-                ImGui.PushStyleColor(ImGuiCol.FrameBg, ImGui.GetStyle().Colors[(int)ImGuiCol.TitleBgActive] with { W = ImGui.GetStyle().Colors[(int)ImGuiCol.FrameBg].W });
+                // TildeTools
+                color.Push(ImGuiCol.FrameBg, ImGui.GetStyle().Colors[(int)ImGuiCol.TitleBgActive] with { W = ImGui.GetStyle().Colors[(int)ImGuiCol.FrameBg].W });
+                // TildeTools ends
             }
             var cur = ImGui.GetCursorPosY();
             Input.Draw();
@@ -448,7 +488,9 @@ public unsafe class ChatWindow : Window
             }
             if(inputCol)
             {
-                ImGui.PopStyleColor();
+                // TildeTools
+                color.Pop();
+                // TildeTools ends
             }
             if(MessageHistory.ShouldSetFocus())
             {
@@ -493,9 +535,11 @@ public unsafe class ChatWindow : Window
                 var col = !EzThrottler.Check("DoubleEnter");
                 if(col)
                 {
-                    ImGui.PushStyleColor(ImGuiCol.Button, EColor.Green);
-                    ImGui.PushStyleColor(ImGuiCol.ButtonActive, EColor.Green);
-                    ImGui.PushStyleColor(ImGuiCol.ButtonHovered, EColor.Green);
+                    // TildeTools
+                    color.Push(ImGuiCol.Button, EColor.Green);
+                    color.Push(ImGuiCol.ButtonActive, EColor.Green);
+                    color.Push(ImGuiCol.ButtonHovered, EColor.Green);
+                    // TildeTools ends
                 }
                 if(isCmd)
                 {
@@ -516,7 +560,9 @@ public unsafe class ChatWindow : Window
                 }
                 if(col)
                 {
-                    ImGui.PopStyleColor(3);
+                    // TildeTools
+                    color.Pop(3);
+                    // TildeTools ends
                 }
             }
             ImGui.SameLine(0, 0);
@@ -529,21 +575,29 @@ public unsafe class ChatWindow : Window
                 {
                     var bytes = Utils.GetLength(tellTarget, x);
                     var fraction = (float)bytes.current / (float)bytes.max;
-                    ImGui.PushStyleColor(ImGuiCol.PlotHistogram, fraction > 1f ? ImGuiColors.DalamudRed : Cust.ColorGeneric);
+                    // TildeTools
+                    color.Push(ImGuiCol.PlotHistogram, fraction > 1f ? ImGuiColors.DalamudRed : Cust.ColorGeneric);
+                    // TildeTools ends
                     ImGui.ProgressBar(fraction, new Vector2(ImGui.GetContentRegionAvail().X, 3f), "");
-                    ImGui.PopStyleColor();
+                    // TildeTools
+                    color.Pop();
+                    // TildeTools ends
                 }
                 if(ImGui.IsMouseHoveringRect(begin, new(begin.X + ImGui.GetContentRegionAvail().X, ImGui.GetCursorScreenPos().Y)))
                 {
-                    ImGui.PushFont(UiBuilder.DefaultFont);
-                    ImGui.BeginTooltip();
-                    ImGui.PushTextWrapPos(ImGui.GetFontSize() * 45f);
-                    ImGuiEx.Text($"This message will be split. Keep pressing send button or enter to sequentially send the following messages:\n\n{split.Print("\n\n")}");
-                    ImGui.Separator();
-                    ImGuiEx.Text(ImGuiColors.DalamudGrey3, $"Debug:\nFirst message:\n{firstMessage}\n\nRemainder:\n{remainder}");
-                    ImGui.PopTextWrapPos();
-                    ImGui.EndTooltip();
-                    ImGui.PopFont();
+                    // TildeTools
+                    font.Push(UiBuilder.DefaultFont);
+                    using(ImRaii.Tooltip())
+                    {
+                        using var wrap = ImRaii.TextWrapPos(ImGui.GetFontSize() * 45f);
+                    // TildeTools ends
+                        ImGuiEx.Text($"This message will be split. Keep pressing send button or enter to sequentially send the following messages:\n\n{split.Print("\n\n")}");
+                        ImGui.Separator();
+                        ImGuiEx.Text(ImGuiColors.DalamudGrey3, $"Debug:\nFirst message:\n{firstMessage}\n\nRemainder:\n{remainder}");
+                    // TildeTools
+                    }
+                    font.Pop();
+                    // TildeTools ends
                 }
             }
             else
@@ -555,9 +609,13 @@ public unsafe class ChatWindow : Window
                 if(takenBySplitter)
                     fraction = Math.Min(fraction, 1f);
                 // TildeTools ends
-                ImGui.PushStyleColor(ImGuiCol.PlotHistogram, fraction > 1f ? ImGuiColors.DalamudRed : Cust.ColorGeneric);
+                // TildeTools
+                color.Push(ImGuiCol.PlotHistogram, fraction > 1f ? ImGuiColors.DalamudRed : Cust.ColorGeneric);
+                // TildeTools ends
                 ImGui.ProgressBar(fraction, new Vector2(ImGui.GetContentRegionAvail().X, 3f), "");
-                ImGui.PopStyleColor();
+                // TildeTools
+                color.Pop();
+                // TildeTools ends
             }
             ImGui.SetWindowFontScale(1);
             if(MessageHistory != null && Utils.IsInForay())
@@ -567,9 +625,13 @@ public unsafe class ChatWindow : Window
                 {
                     ImGuiEx.LineCentered("WarningEureka", () =>
                     {
-                        ImGui.PushFont(UiBuilder.DefaultFont);
+                        // TildeTools
+                        font.Push(UiBuilder.DefaultFont);
+                        // TildeTools ends
                         ImGuiEx.Text(ImGuiColors.DalamudOrange, $"Sending DMs in forays is experimental function.");
-                        ImGui.PopFont();
+                        // TildeTools
+                        font.Pop();
+                        // TildeTools ends
                     });
                 }
             }
@@ -578,7 +640,9 @@ public unsafe class ChatWindow : Window
 
             if(MessageHistory.IsEngagement)
             {
-                ImGui.PushFont(UiBuilder.DefaultFont);
+                // TildeTools
+                font.Push(UiBuilder.DefaultFont);
+                // TildeTools ends
                 try
                 {
                     var engagementInfo = C.Engagements.FirstOrDefault(x => x.Name == MessageHistory.HistoryPlayer.Name);
@@ -590,10 +654,12 @@ public unsafe class ChatWindow : Window
                             ImGuiEx.Tooltip("Enable this engagement. If you disable it, no new messages will be added.");
                             ImGui.SameLine();
                             ImGui.SetNextItemWidth(110f);
-                            if(ImGui.BeginCombo("##ctrl", $"{engagementInfo.Participants.Count} participants", ImGuiComboFlags.HeightLarge))
+                            // TildeTools
+                            using(var combo = ImRaii.Combo("##ctrl", $"{engagementInfo.Participants.Count} participants", ImGuiComboFlags.HeightLarge)) if(combo)
+                            // TildeTools ends
                             {
                                 TabEngagement.DrawEngagementEditTable(engagementInfo, false);
-                                ImGui.EndCombo();
+                                // TildeTools: EndCombo removed, the using ends it
                             }
                             ImGui.SameLine();
                             if(ImGuiEx.IconButton(FontAwesomeIcon.UserEdit))
@@ -622,7 +688,9 @@ public unsafe class ChatWindow : Window
                                     engagementInfo.DefaultTarget = null;
                                 }
                             }
-                            if(ImGui.BeginCombo("##engTarget", $"{targetName}", ImGuiComboFlags.HeightRegular))
+                            // TildeTools
+                            using(var combo = ImRaii.Combo("##engTarget", $"{targetName}", ImGuiComboFlags.HeightRegular)) if(combo)
+                            // TildeTools ends
                             {
                                 ImGuiEx.Text($"Select default target for sending messages via enter button.");
                                 if(ImGui.Selectable("None", engagementInfo.DefaultTarget == null))
@@ -649,13 +717,18 @@ public unsafe class ChatWindow : Window
                                         }
                                     }, null, false)
                                     );
-                                ImGui.EndCombo();
+                                // TildeTools: EndCombo removed, the using ends it
                             }
                         });
                     }
-                    if(ImGui.BeginPopup("SelectSendSubject"))
+                    // TildeTools
+                    using var popup = ImRaii.Popup("SelectSendSubject");
+                    if(popup)
+                    // TildeTools ends
                     {
-                        if(ImGui.BeginMenu("- Players -"))
+                        // TildeTools
+                        using(var menu = ImRaii.Menu("- Players -")) if(menu)
+                        // TildeTools ends
                         {
                             foreach(var x in engagementInfo.Participants)
                             {
@@ -664,9 +737,11 @@ public unsafe class ChatWindow : Window
                                     SendMessage(x.GetChannelName(), false);
                                 }
                             }
-                            ImGui.EndMenu();
+                            // TildeTools: EndMenu removed, the using ends it
                         }
-                        if(ImGui.BeginMenu("- Channels -"))
+                        // TildeTools
+                        using(var menu = ImRaii.Menu("- Channels -")) if(menu)
+                        // TildeTools ends
                         {
                             for(var i = 1; i < TabIndividual.Types.Length; i++)
                             {
@@ -677,7 +752,7 @@ public unsafe class ChatWindow : Window
                                     SendMessage(Utils.GetGenericCommand(x), true);
                                 }
                             }
-                            ImGui.EndMenu();
+                            // TildeTools: EndMenu removed, the using ends it
                         }
                         ImGui.Separator();
 
@@ -690,7 +765,7 @@ public unsafe class ChatWindow : Window
                                 SendMessage(Utils.GetGenericCommand(x), true);
                             }
                         }
-                        ImGui.EndPopup();
+                        // TildeTools: EndPopup removed, the using ends it
                     }
                 }
                 catch(Exception e)
@@ -698,7 +773,9 @@ public unsafe class ChatWindow : Window
                     e.Log();
                 }
 
-                ImGui.PopFont();
+                // TildeTools
+                font.Pop();
+                // TildeTools ends
                 fieldHeight = ImGui.GetCursorPosY() - cursor;
             }
 
