@@ -2,7 +2,7 @@
 using ECommons.Interop;
 using ECommons.Throttlers;
 using Messenger.Services.EmojiLoaderService;
-using System.Text.RegularExpressions;
+// TildeTools: Regex using removed
 using TerraFX.Interop.Windows;
 
 namespace Messenger.Gui;
@@ -188,7 +188,9 @@ public unsafe partial class PseudoMultilineInput
                             IsSelectingEmoji = !IsSelectingEmoji;
                             EmojiStartCursor = i;
                         }
-                        else if(!EmojiWhitelistedSymbols().IsMatch(((char)data->Buf[i]).ToString()))
+                        // TildeTools
+                        else if(!EmojiWhitelistedSymbol(data->Buf[i]))
+                        // TildeTools ends
                         {
                             IsSelectingEmoji = false;
                         }
@@ -205,7 +207,9 @@ public unsafe partial class PseudoMultilineInput
                             {
                                 IsSelectingEmoji = false;
                             }
-                            if(!EmojiWhitelistedSymbols().IsMatch(((char)data->Buf[i]).ToString())) break;
+                            // TildeTools
+                            if(!EmojiWhitelistedSymbol(data->Buf[i])) break;
+                            // TildeTools ends
                         }
                     }
                     if(IsSelectingEmoji)
@@ -517,6 +521,8 @@ public unsafe partial class PseudoMultilineInput
         return MemoryHelper.ReadString(((nint)array) + start, length - start);
     }
 
-    [GeneratedRegex(@"^[a-z0-9_]{1}$", RegexOptions.IgnoreCase)]
-    private static partial Regex EmojiWhitelistedSymbols();
+    // TildeTools
+    // No per-byte string or regex
+    private static bool EmojiWhitelistedSymbol(byte c) => char.IsAsciiLetterOrDigit((char)c) || c == '_';
+    // TildeTools ends
 }
