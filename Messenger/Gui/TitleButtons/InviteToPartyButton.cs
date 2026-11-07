@@ -1,5 +1,8 @@
 ﻿using Dalamud.Game.ClientState.Objects.SubKinds;
 using ECommons.GameHelpers;
+// TildeTools
+using Dalamud.Interface.Utility.Raii;
+// TildeTools ends
 
 namespace Messenger.Gui.TitleButtons;
 public class InviteToPartyButton : ChatWindowTitleButton
@@ -65,7 +68,9 @@ public class InviteToPartyButton : ChatWindowTitleButton
             RequestOpenPopup = false;
             ImGui.OpenPopup($"###Invite{MessageHistory.HistoryPlayer}");
         }
-        if(ImGui.BeginPopup($"###Invite{MessageHistory.HistoryPlayer}"))
+        // TildeTools
+        using(var popup = ImRaii.Popup($"###Invite{MessageHistory.HistoryPlayer}")) if(popup)
+        // TildeTools ends
         {
             ImGuiEx.Text($"Unable to determine {MessageHistory.HistoryPlayer}'s current world.");
             if(ImGui.Selectable("Same world"))
@@ -83,7 +88,7 @@ public class InviteToPartyButton : ChatWindowTitleButton
                     Notify.Error("This action is only possible for your friends.");
                 }
             }
-            ImGui.EndPopup();
+            // TildeTools: EndPopup removed, the using ends it
         }
     }
 
