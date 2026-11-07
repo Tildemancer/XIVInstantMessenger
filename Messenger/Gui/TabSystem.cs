@@ -1,4 +1,7 @@
 ﻿using Messenger.Configuration;
+// TildeTools
+using Dalamud.Interface.Utility.Raii;
+// TildeTools ends
 
 namespace Messenger.Gui;
 
@@ -101,8 +104,13 @@ internal class TabSystem : Window
         }
         if(!C.VerticalTabs)
         {
-            if(ImGui.BeginTabBar("##MessengerTabs", ImGuiTabBarFlags.FittingPolicyScroll | ImGuiTabBarFlags.Reorderable))
+            // TildeTools
+            using(var tabBar = ImRaii.TabBar("##MessengerTabs", ImGuiTabBarFlags.FittingPolicyScroll | ImGuiTabBarFlags.Reorderable)) if(tabBar)
+            // TildeTools ends
             {
+                // TildeTools
+                using var tabColor = new ImRaii.ColorDisposable();
+                // TildeTools ends
                 foreach(var w in Windows.ToArray())
                 {
                     var isOpen = w.IsOpen;
@@ -115,19 +123,25 @@ internal class TabSystem : Window
                     if(w.Unread)
                     {
                         titleColored = true;
-                        ImGui.PushStyleColor(ImGuiCol.TabActive, ImGuiCol.TabActive.GetFlashColor(w.Cust));
-                        ImGui.PushStyleColor(ImGuiCol.Tab, ImGuiCol.Tab.GetFlashColor(w.Cust));
-                        ImGui.PushStyleColor(ImGuiCol.TabHovered, ImGuiCol.TabHovered.GetFlashColor(w.Cust));
+                        // TildeTools
+                        tabColor.Push(ImGuiCol.TabActive, ImGuiCol.TabActive.GetFlashColor(w.Cust));
+                        tabColor.Push(ImGuiCol.Tab, ImGuiCol.Tab.GetFlashColor(w.Cust));
+                        tabColor.Push(ImGuiCol.TabHovered, ImGuiCol.TabHovered.GetFlashColor(w.Cust));
+                        // TildeTools ends
                     }
-                    if(isOpen && ImGui.BeginTabItem(w.MessageHistory.HistoryPlayer.GetChannelName(!C.TabsNoWorld) + $"###{w.WindowName}", ref isOpen, flags))
+                    // TildeTools
+                    using(var tab = isOpen ? ImRaii.TabItem(w.MessageHistory.HistoryPlayer.GetChannelName(!C.TabsNoWorld) + $"###{w.WindowName}", ref isOpen, flags) : default) if(tab)
+                    // TildeTools ends
                     {
                         Associate(w);
                         if(titleColored)
                         {
-                            ImGui.PopStyleColor(3);
+                            // TildeTools
+                            tabColor.Pop(3);
+                            // TildeTools ends
                         }
                         DrawInnerWindow(w);
-                        ImGui.EndTabItem();
+                        // TildeTools: EndTabItem removed, the using ends it
                     }
                     else
                     {
@@ -138,30 +152,43 @@ internal class TabSystem : Window
                         }
                         if(titleColored)
                         {
-                            ImGui.PopStyleColor(3);
+                            // TildeTools
+                            tabColor.Pop(3);
+                            // TildeTools ends
                         }
                     }
                     w.IsOpen = isOpen;
                 }
-                ImGui.EndTabBar();
+                // TildeTools: EndTabBar removed, the using ends it
             }
         }
         else
         {
             ApplyVerticalTabAutoSelection();
-            if(ImGui.BeginTable("##MessengerVerticalTabsLayout", 2, ImGuiTableFlags.Resizable))
+            // TildeTools
+            using(var layout = ImRaii.Table("##MessengerVerticalTabsLayout", 2, ImGuiTableFlags.Resizable)) if(layout)
+            // TildeTools ends
             {
                 float initialTabListColWidth = ImGui.GetContentRegionAvail().X * 0.2f;
                 float initialTabContentColWidth = ImGui.GetContentRegionAvail().X * 0.8f;
                 ImGui.TableSetupColumn("TabList", ImGuiTableColumnFlags.None, initialTabListColWidth);
                 ImGui.TableSetupColumn("TabContent", ImGuiTableColumnFlags.None, initialTabContentColWidth);
                 ImGui.TableNextColumn();
-                if(ImGui.BeginTable("##MessengerVerticalTabList", 1, ImGuiTableFlags.ScrollY))
+                // TildeTools
+                using(var list = ImRaii.Table("##MessengerVerticalTabList", 1, ImGuiTableFlags.ScrollY)) if(list)
+                // TildeTools ends
                 {
                     ImGui.TableSetupColumn("User");
+                    // TildeTools
+                    using var id = new ImRaii.IdDisposable();
+                    using var style = new ImRaii.StyleDisposable();
+                    using var color = new ImRaii.ColorDisposable();
+                    // TildeTools ends
                     foreach(var w in Windows.ToArray())
                     {
-                        ImGui.PushID(w.WindowName);
+                        // TildeTools
+                        id.Push(w.WindowName);
+                        // TildeTools ends
                         if(w.IsOpen)
                         {
                             if(w.MessageHistory.ShouldSetFocus())
@@ -188,7 +215,9 @@ internal class TabSystem : Window
                             var transparent = !HoveredChannels.Contains(w.MessageHistory.HistoryPlayer);
                             var hovered = false;
                             var buttonCurPos = ImGui.GetCursorPos();
-                            ImGui.PushStyleVar(ImGuiStyleVar.Alpha, 0f);
+                            // TildeTools
+                            style.Push(ImGuiStyleVar.Alpha, 0f);
+                            // TildeTools ends
                             if(ImGuiEx.SmallIconButton(FontAwesomeIcon.Times))
                             {
                                 w.IsOpen = false;
@@ -197,7 +226,9 @@ internal class TabSystem : Window
                                     SelectedWindowforVerticalTabs = null;
                                 }
                             }
-                            ImGui.PopStyleVar();
+                            // TildeTools
+                            style.Pop();
+                            // TildeTools ends
                             if(ImGui.IsItemHovered()) hovered = true;
                             ImGui.SameLine(0, 0);
                             ImGui.SetCursorPos(storeCurPos);
@@ -215,13 +246,19 @@ internal class TabSystem : Window
                                 ImGui.SameLine(0, 0);
                                 var curPos = ImGui.GetCursorPos();
                                 ImGui.SetCursorPos(buttonCurPos);
-                                ImGui.PushStyleColor(ImGuiCol.Text, ImGuiColors.DalamudRed);
+                                // TildeTools
+                                color.Push(ImGuiCol.Text, ImGuiColors.DalamudRed);
+                                // TildeTools ends
                                 var col = ImGui.GetStyle().Colors[(int)ImGuiCol.WindowBg];
-                                ImGui.PushStyleColor(ImGuiCol.Button, col);
-                                ImGui.PushStyleColor(ImGuiCol.ButtonActive, col);
-                                ImGui.PushStyleColor(ImGuiCol.ButtonHovered, col);
+                                // TildeTools
+                                color.Push(ImGuiCol.Button, col);
+                                color.Push(ImGuiCol.ButtonActive, col);
+                                color.Push(ImGuiCol.ButtonHovered, col);
+                                // TildeTools ends
                                 ImGuiEx.SmallIconButton(FontAwesomeIcon.Times);
-                                ImGui.PopStyleColor(4);
+                                // TildeTools
+                                color.Pop(4);
+                                // TildeTools ends
                                 ImGui.SetCursorPos(curPos);
                             }
                             if(hovered)
@@ -233,9 +270,11 @@ internal class TabSystem : Window
                                 HoveredChannels.Remove(w.MessageHistory.HistoryPlayer);
                             }
                         }
-                        ImGui.PopID();
+                        // TildeTools
+                        id.Pop();
+                        // TildeTools ends
                     }
-                    ImGui.EndTable();
+                    // TildeTools: EndTable removed, the using ends it
                 }
                 ApplyVerticalTabAutoSelection();
                 ImGui.TableNextColumn();
@@ -243,7 +282,7 @@ internal class TabSystem : Window
                 {
                     DrawInnerWindow(SelectedWindowforVerticalTabs);
                 }
-                ImGui.EndTable();
+                // TildeTools: EndTable removed, the using ends it
             }
         }
     }
@@ -272,14 +311,20 @@ internal class TabSystem : Window
         {
             ImGui.OpenPopup($"Associate{w.MessageHistory.HistoryPlayer}");
         }
-        if (ImGui.BeginPopup($"Associate{w.MessageHistory.HistoryPlayer}"))
+        // TildeTools
+        using(var popup = ImRaii.Popup($"Associate{w.MessageHistory.HistoryPlayer}")) if(popup)
+        // TildeTools ends
         {
-            ImGui.PushStyleColor(ImGuiCol.Text, ImGuiColors.DalamudYellow);
+            // TildeTools
+            using var color = ImRaii.PushColor(ImGuiCol.Text, ImGuiColors.DalamudYellow);
+            // TildeTools ends
             if (ImGui.Selectable("Default window"))
             {
                 C.TabWindowAssociations.Remove(w.MessageHistory.HistoryPlayer.ToString());
             }
-            ImGui.PopStyleColor();
+            // TildeTools
+            color.Pop();
+            // TildeTools ends
             foreach (var x in C.TabWindows)
             {
                 if (ImGui.Selectable(x))
@@ -287,7 +332,7 @@ internal class TabSystem : Window
                     C.TabWindowAssociations[w.MessageHistory.HistoryPlayer.ToString()] = x;
                 }
             }
-            ImGui.EndPopup();
+            // TildeTools: EndPopup removed, the using ends it
         }
     }
 
