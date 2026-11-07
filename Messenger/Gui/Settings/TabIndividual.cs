@@ -1,6 +1,9 @@
 ﻿using Dalamud.Game.Text;
 using Messenger.Configuration;
 using Newtonsoft.Json;
+// TildeTools
+using Dalamud.Interface.Utility.Raii;
+// TildeTools ends
 
 namespace Messenger.Gui.Settings;
 
@@ -70,14 +73,18 @@ internal class TabIndividual
 
     internal void Draw()
     {
-        if(ImGui.BeginTable("##table", 2, ImGuiTableFlags.SizingStretchSame | ImGuiTableFlags.NoSavedSettings | ImGuiTableFlags.Borders))
+        // TildeTools
+        using(var table = ImRaii.Table("##table", 2, ImGuiTableFlags.SizingStretchSame | ImGuiTableFlags.NoSavedSettings | ImGuiTableFlags.Borders)) if(table)
+        // TildeTools ends
         {
             ImGui.TableSetupColumn("col1");
             ImGui.TableSetupColumn("col2");
 
             ImGui.TableNextColumn();
 
-            if(ImGui.BeginChild("Col1"))
+            // TildeTools
+            using(var child = ImRaii.Child("Col1")) if(child)
+            // TildeTools ends
             {
                 ImGuiEx.Text($"Process following generic channels:");
                 for(var i = 1; i < Types.Length; i++)
@@ -85,13 +92,17 @@ internal class TabIndividual
                     ImGuiEx.CollectionCheckbox($"{Names[i]}", Types[i], C.Channels);
                 }
             }
-            ImGui.EndChild();
+            // TildeTools: EndChild removed, the using ends it
 
             ImGui.TableNextColumn();
-            if(ImGui.BeginChild("Col2"))
+            // TildeTools
+            using(var child = ImRaii.Child("Col2")) if(child)
+            // TildeTools ends
             {
                 ImGuiEx.SetNextItemFullWidth();
-                if(ImGui.BeginCombo("###custom", Selected == XivChatType.None ? "Customize settings for specific channel..." : $"Customize settings for: {Selected.GetName()}"))
+                // TildeTools
+                using(var combo = ImRaii.Combo("###custom", Selected == XivChatType.None ? "Customize settings for specific channel..." : $"Customize settings for: {Selected.GetName()}")) if(combo)
+                // TildeTools ends
                 {
                     for(var i = 0; i < Types.Length; i++)
                     {
@@ -101,7 +112,7 @@ internal class TabIndividual
                             Selected = Types[i];
                         }
                     }
-                    ImGui.EndCombo();
+                    // TildeTools: EndCombo removed, the using ends it
                 }
                 ImGui.Separator();
                 if(Selected != XivChatType.None)
@@ -141,9 +152,9 @@ internal class TabIndividual
                     }
                 }
             }
-            ImGui.EndChild();
+            // TildeTools: EndChild removed, the using ends it
 
-            ImGui.EndTable();
+            // TildeTools: EndTable removed, the using ends it
         }
     }
 
