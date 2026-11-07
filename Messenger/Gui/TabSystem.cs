@@ -11,7 +11,10 @@ internal class TabSystem : Window
     internal IEnumerable<ChatWindow> Windows => P.WindowSystemChat.Windows.Cast<ChatWindow>().Where(x => (Name == null && !C.TabWindows.Contains(x.OwningTab)) || x.OwningTab == Name);
     internal ChatWindow SelectedWindowforVerticalTabs = null;
 
-    public TabSystem(string name) : base($"XIV Instant Messenger - {name ?? "Default Window"}", ImGuiWindowFlags.NoScrollbar)
+    // TildeTools
+    // Without NoFocusOnAppearing, the tab window opening on a first message takes focus from the chat box mid-typing
+    public TabSystem(string name) : base($"XIV Instant Messenger - {name ?? "Default Window"}", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoFocusOnAppearing)
+    // TildeTools ends
     {
         RespectCloseHotkey = false;
         IsOpen = true;
