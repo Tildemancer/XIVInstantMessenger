@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+// TildeTools
+using Dalamud.Interface.Utility.Raii;
+// TildeTools ends
 
 namespace Messenger.Gui.Settings;
 public static unsafe class TabTranslation
@@ -11,7 +14,9 @@ public static unsafe class TabTranslation
     {
         ImGuiEx.TextWrapped("If you'd like your messages to be automatically translated, you can select a translation provider here. ");
         ImGuiEx.SetNextItemFullWidth();
-        if(ImGui.BeginCombo("##tr", C.TranslationProvider ?? "- Translation Disabled -"))
+        // TildeTools
+        using(var combo = ImRaii.Combo("##tr", C.TranslationProvider ?? "- Translation Disabled -")) if(combo)
+        // TildeTools ends
         {
             if(ImGui.Selectable("- Translation Disabled -", C.TranslationProvider == null))
             {
@@ -33,7 +38,7 @@ public static unsafe class TabTranslation
                     C.TranslationProvider = x;
                 }
             }
-            ImGui.EndCombo();
+            // TildeTools: EndCombo removed, the using ends it
         }
 
         if(C.TranslationProvider != null)
