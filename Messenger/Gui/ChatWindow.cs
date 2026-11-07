@@ -194,7 +194,7 @@ public unsafe class ChatWindow : Window
 
     private bool TakenBySplitter(string subject)
     {
-        if(MessageHistory == null || subject == null)
+        if(subject == null)
             return false;
         var text = Input.SinglelineText;
         if(Taken.Text == text && Taken.Subject == subject && Taken.Generation == S.Splitter.Generation)
