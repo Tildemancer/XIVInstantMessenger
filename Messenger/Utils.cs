@@ -664,30 +664,7 @@ internal static unsafe partial class Utils
         }
     }
 
-    public static List<Payload> GetItemPayload(Item? itemNullable, bool hq)
-    {
-        if(itemNullable == null)
-        {
-            throw new Exception("Tried to link NULL item.");
-        }
-        var item = itemNullable.Value;
-        List<Payload> payloadList =
-        [
-            new UIForegroundPayload((ushort) (0x223 + item.Rarity * 2)),
-            new UIGlowPayload((ushort) (0x224 + item.Rarity * 2)),
-            new ItemPayload(item.RowId, item.CanBeHq && hq),
-            new UIForegroundPayload(500),
-            new UIGlowPayload(501),
-            new TextPayload($"{(char) SeIconChar.LinkMarker}"),
-            new UIForegroundPayload(0),
-            new UIGlowPayload(0),
-            new TextPayload(item.Name.ToString() + (item.CanBeHq && hq ? $" {(char)SeIconChar.HighQuality}" : "")),
-            new RawPayload([0x02, 0x27, 0x07, 0xCF, 0x01, 0x01, 0x01, 0xFF, 0x01, 0x03]),
-            new RawPayload([0x02, 0x13, 0x02, 0xEC, 0x03])
-        ];
-
-        return payloadList;
-    }
+    // TildeTools: GetItemPayload removed, ChatWindow uses SeString.CreateItemLink
 
 
     public static long GetLatestMessageTime(this MessageHistory history)

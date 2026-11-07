@@ -3,7 +3,7 @@ using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling;
 using ECommons.Automation;
 using ECommons.Throttlers;
-using Lumina.Excel.Sheets;
+// TildeTools: Lumina.Excel.Sheets using removed with the Item sheet lookup
 using Messenger.Configuration;
 using Messenger.Gui.Settings;
 // TildeTools
@@ -926,7 +926,9 @@ public unsafe class ChatWindow : Window
                 {
                     Safe(delegate
                     {
-                        Svc.Chat.Print(new SeStringBuilder().Add(Utils.GetItemPayload(Svc.Data.GetExcelSheet<Item>().GetRowOrDefault(x.Item.Item.RowId), x.Item.IsHQ)).BuiltString);
+                        // TildeTools
+                        Svc.Chat.Print(SeString.CreateItemLink(x.Item.Item.RowId, x.Item.IsHQ));
+                        // TildeTools ends
                     });
                 }
             }
