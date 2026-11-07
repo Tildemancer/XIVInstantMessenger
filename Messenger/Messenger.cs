@@ -452,7 +452,10 @@ public unsafe class Messenger : IDalamudPlugin
         {
             return "Cross-world parties are not supported";
         }
-        if(TryGetAddonByName<FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase>("ChatLog", out var addon) && addon->IsVisible)
+        // TildeTools
+        // No IsVisible check, Chat 2's HideChat clears it on ChatLog every frame
+        if(TryGetAddonByName<FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase>("ChatLog", out _))
+        // TildeTools ends
         {
             var party = Svc.Party;
             var leader = (ulong?)party[(int)party.PartyLeaderIndex]?.ContentId;
