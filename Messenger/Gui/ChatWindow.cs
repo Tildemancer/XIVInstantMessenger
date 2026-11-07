@@ -283,8 +283,8 @@ public unsafe class ChatWindow : Window
             var subjectNoWorld = MessageHistory.HistoryPlayer.GetPlayerName().Split("@")[0];
             var me = Svc.ClientState.LocalPlayer?.Name.ToString().Split("@")[0] ?? "Me";
             // TildeTools
-            // Upstream's child lines are indented into the using block. The child's result stays unchecked, as upstream's was,
-            // since the body also merges the loaded log and counts down the scroll
+            // Upstream's child lines are indented into the using block, and their pushes and pops are swapped for ImRaii. The
+            // child's result stays unchecked, as upstream's was, since the body also merges the loaded log and counts down the scroll
             using(ImRaii.Child($"##ChatChild{subject}", new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetContentRegionAvail().Y - fieldHeight)))
             {
                 // Its own color object, so a throw pops these before the child ends
@@ -320,51 +320,35 @@ public unsafe class ChatWindow : Window
                     var message = MessageHistory.Messages[n];
                     if(message.IsSystem)
                     {
-            // TildeTools ends
-                        // TildeTools
                         textColor.Push(ImGuiCol.Text, Cust.ColorGeneric);
                         message.Draw();
                         textColor.Pop();
-                        // TildeTools ends
                     }
-                    // TildeTools
                     else
-                    // TildeTools ends
                     {
-                        // TildeTools
                         if(!message.IsIncoming && Cust.NoOutgoing) continue;
                         var time = DateTimeOffset.FromUnixTimeMilliseconds(message.Time).ToLocalTime();
                         if(C.PrintDate)
-                        // TildeTools ends
                         {
-                            // TildeTools
                             if(!(time.DayOfYear == currentDay.day && time.Year == currentDay.year))
                             {
                                 ImGuiEx.Text(Cust.ColorGeneric, $"[{time.ToString(C.DateFormat)}]");
                                 if(C.MessageSpacing > 0) ImGui.Dummy(new(C.MessageSpacing));
                                 currentDay = (time.Year, time.DayOfYear);
                             }
-                            // TildeTools ends
                         }
-                        // TildeTools
                         var timestamp = time.ToString(C.MessageTimestampFormat);
                         if(C.IRCStyle)
-                        // TildeTools ends
                         {
-                            // TildeTools
                             var messageColor = message.IsIncoming ? Cust.ColorFromMessage : Cust.ColorToMessage;
                             var subjectColor = message.IsIncoming ? Cust.ColorFromTitle : Cust.ColorToTitle;
                             ImGuiEx.Text(Cust.ColorGeneric, $"{timestamp} ");
                             ImGui.SameLine(0, 0);
                             if(message.XivChatType != XivChatType.CustomEmote)
-                            // TildeTools ends
                             {
-                                // TildeTools
                                 ImGuiEx.Text(messageColor, $"[");
                                 ImGui.SameLine(0, 0);
-                                // TildeTools ends
                             }
-                            // TildeTools
                             ImGuiEx.Text(subjectColor, $"{message.OverrideName?.Split("@")[0] ?? (message.IsIncoming ? subjectNoWorld : me)}");
                             ImGui.SameLine(0, 0);
                             if(message.XivChatType != XivChatType.CustomEmote)
@@ -376,8 +360,6 @@ public unsafe class ChatWindow : Window
                             message.Draw("", "", () => PostMessageFunctionsShared(message));
                             PostMessageFunctions(message);
                             textColor.Pop();
-                            // TildeTools ends
-                        // TildeTools
                         }
                         else
                         {
@@ -403,13 +385,9 @@ public unsafe class ChatWindow : Window
                             message.Draw("[{timestamp}] ", "", () => PostMessageFunctionsShared(message));
                             PostMessageFunctions(message);
                             textColor.Pop();
-                        // TildeTools ends
                         }
-                        // TildeTools: Upstream's lines here moved with the indent
                     }
-                    // TildeTools: Upstream's closing lines here moved with the indent
 
-                    // TildeTools
                     if(ScrollToMessage == n)
                     {
                         PluginLog.Verbose($"Set scroll to {n}");
@@ -421,8 +399,6 @@ public unsafe class ChatWindow : Window
                 // Popped before the scroll calls, which read ItemSpacing
                 spacing.Pop();
                 if(MessageHistory.DoScroll > 0)
-                // TildeTools ends
-                // TildeTools
                 {
                     MessageHistory.DoScroll--;
                     ImGui.SetScrollHereY();
