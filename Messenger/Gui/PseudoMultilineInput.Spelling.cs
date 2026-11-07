@@ -61,7 +61,7 @@ public unsafe partial class PseudoMultilineInput
             (PendingWord, var pickedAt, PendingMisspelled) = index >= from && index < to
                 ? (Text[from..to], from, misspellings.Any(m => m.Start == from && m.Length == to - from))
                 : misspelling.Length > 0
-                ? (misspelling.Word(Text), misspelling.Start, true)
+                ? (Text.Substring(misspelling.Start, misspelling.Length), misspelling.Start, true)
                 : S.SpellCheck.WordAt(Text, index) is var (start, length) ? (Text.Substring(start, length), start, false) : ("", -1, false);
 
             var picked = PendingWord;
@@ -192,7 +192,7 @@ public unsafe partial class PseudoMultilineInput
                     var (left, width) = measured[i];
                     var (from, to) = (Math.Max(origin.X + left, min.X), Math.Min(origin.X + left + width, max.X));
 
-                    if(start >= lineStart && start + length <= lineEnd && !float.IsNaN(left) && to > from)
+                    if(start >= lineStart && start + length <= lineEnd && to > from)
                         drawList.AddLine(new Vector2(from, y), new Vector2(to, y), color, thick);
                 }
 
@@ -219,11 +219,6 @@ public unsafe partial class PseudoMultilineInput
         foreach(var misspelling in misspellings)
         {
             var start = misspelling.Start;
-            if(start < 0 || start + misspelling.Length > Text.Length)
-            {
-                at.Add((float.NaN, 0f));
-                continue;
-            }
 
             // Out of order, so measuring starts over from the start of the text.
             if(start < measuredTo)

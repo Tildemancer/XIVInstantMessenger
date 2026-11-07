@@ -5,13 +5,7 @@ using Dalamud.Plugin.Ipc.Exceptions;
 
 namespace Messenger.Services;
 
-public readonly record struct Misspelling(int Start, int Length)
-{
-    public string Word(string text) =>
-        Start >= 0 && Length > 0 && Start + Length <= text.Length
-            ? text.Substring(Start, Length)
-            : string.Empty;
-}
+public readonly record struct Misspelling(int Start, int Length);
 
 public sealed class SpellCheck : IDisposable
 {
