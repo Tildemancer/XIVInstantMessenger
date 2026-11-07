@@ -84,7 +84,9 @@ internal class TabStyle
             ImGui.SetNextItemWidth(50f);
             ImGui.DragInt("Begin new column after this much rows", ref C.WindowCascadingReset, 1f, 1, 1000);
             ImGui.SetNextItemWidth(50f);
-            ImGui.DragInt("Maximum columns", ref C.WindowCascadingReset, 1f, 1, 100);
+            // TildeTools
+            ImGui.DragInt("Maximum columns", ref C.WindowCascadingMaxColumns, 1f, 1, 100);
+            // TildeTools ends
         }
         ImGui.Separator();
         ImGuiEx.Text("Display following buttons in chat windows:");
