@@ -12,6 +12,9 @@ using Messenger.Configuration;
 using Messenger.FriendListManager;
 using NightmareUI.ImGuiElements;
 using System.Threading;
+// TildeTools
+using Dalamud.Interface.Utility.Raii;
+// TildeTools ends
 
 namespace Messenger.Gui.Settings;
 
@@ -83,7 +86,9 @@ internal unsafe class TabDebug
                     ChatType: {RaptureShellModule.Instance()->ChatType}
                     """);
                 ImGuiEx.Text($"From object table:");
-                ImGui.Indent();
+                // TildeTools
+                using var indent = ImRaii.PushIndent();
+                // TildeTools ends
                 var list = new List<EMD>();
                 S.EurekaMonitor.FillFromObjectTableAndParty(list);
                 ImGuiEx.Text(list.Print("\n"));
@@ -95,7 +100,7 @@ internal unsafe class TabDebug
                 list.Clear();
                 S.EurekaMonitor.FillFromCharaSearch(list);
                 ImGuiEx.Text(list.Print("\n"));
-                ImGui.Unindent();
+                // TildeTools: Unindent removed, the using ends it
             }
             ImGuiEx.TextCopy($"{(nint)(RaptureShellModule.Instance()):X16}");
             ImGui.SameLine();
@@ -200,7 +205,9 @@ internal unsafe class TabDebug
                 {
                     S.EmojiLoader.BuildCache();
                 }
-                ImGui.Columns(4);
+                // TildeTools
+                using var columns = ImRaii.Columns(4, "", true);
+                // TildeTools ends
                 foreach(var x in S.EmojiLoader.Emoji)
                 {
                     var w = x.Value.GetTextureWrap();
@@ -212,7 +219,7 @@ internal unsafe class TabDebug
                     ImGuiEx.Text($"{x.Key}\n{x.Value.IsReady}");
                     ImGui.NextColumn();
                 }
-                ImGui.Columns(1);
+                // TildeTools: Columns(1) removed, the using restores the column count
             }
             if(ImGui.CollapsingHeader("PML"))
             {
