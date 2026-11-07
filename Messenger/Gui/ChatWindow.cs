@@ -289,7 +289,6 @@ public unsafe class ChatWindow : Window
             {
                 // Its own color object, so a throw pops these before the child ends
                 using var textColor = new ImRaii.ColorDisposable();
-            // TildeTools ends
                 if(MessageHistory.Messages.Count == 0)
                 {
                     Utils.DrawWrappedText($"This is the beginning of your chat with {subject}");
@@ -305,9 +304,7 @@ public unsafe class ChatWindow : Window
                     MessageHistory.LoadedMessages.Clear();
                 }
                 (int year, int day) currentDay = (0, 0);
-                // TildeTools
                 using var spacing = ImRaii.PushStyle(ImGuiStyleVar.ItemSpacing, new Vector2(0, C.MessageLineSpacing));
-                // TildeTools ends
                 var startIndex = Math.Max(0, MessageHistory.Messages.Count - DisplayCap);
                 if(startIndex != 0)
                 {
@@ -323,39 +320,51 @@ public unsafe class ChatWindow : Window
                     var message = MessageHistory.Messages[n];
                     if(message.IsSystem)
                     {
+            // TildeTools ends
                         // TildeTools
                         textColor.Push(ImGuiCol.Text, Cust.ColorGeneric);
-                        // TildeTools ends
                         message.Draw();
-                        // TildeTools
                         textColor.Pop();
                         // TildeTools ends
                     }
+                    // TildeTools
                     else
+                    // TildeTools ends
                     {
+                        // TildeTools
                         if(!message.IsIncoming && Cust.NoOutgoing) continue;
                         var time = DateTimeOffset.FromUnixTimeMilliseconds(message.Time).ToLocalTime();
                         if(C.PrintDate)
+                        // TildeTools ends
                         {
+                            // TildeTools
                             if(!(time.DayOfYear == currentDay.day && time.Year == currentDay.year))
                             {
                                 ImGuiEx.Text(Cust.ColorGeneric, $"[{time.ToString(C.DateFormat)}]");
                                 if(C.MessageSpacing > 0) ImGui.Dummy(new(C.MessageSpacing));
                                 currentDay = (time.Year, time.DayOfYear);
                             }
+                            // TildeTools ends
                         }
+                        // TildeTools
                         var timestamp = time.ToString(C.MessageTimestampFormat);
                         if(C.IRCStyle)
+                        // TildeTools ends
                         {
+                            // TildeTools
                             var messageColor = message.IsIncoming ? Cust.ColorFromMessage : Cust.ColorToMessage;
                             var subjectColor = message.IsIncoming ? Cust.ColorFromTitle : Cust.ColorToTitle;
                             ImGuiEx.Text(Cust.ColorGeneric, $"{timestamp} ");
                             ImGui.SameLine(0, 0);
                             if(message.XivChatType != XivChatType.CustomEmote)
+                            // TildeTools ends
                             {
+                                // TildeTools
                                 ImGuiEx.Text(messageColor, $"[");
                                 ImGui.SameLine(0, 0);
+                                // TildeTools ends
                             }
+                            // TildeTools
                             ImGuiEx.Text(subjectColor, $"{message.OverrideName?.Split("@")[0] ?? (message.IsIncoming ? subjectNoWorld : me)}");
                             ImGui.SameLine(0, 0);
                             if(message.XivChatType != XivChatType.CustomEmote)
@@ -363,14 +372,12 @@ public unsafe class ChatWindow : Window
                                 ImGuiEx.Text(messageColor, $"] ");
                                 ImGui.SameLine(0, 0);
                             }
-                            // TildeTools
                             textColor.Push(ImGuiCol.Text, messageColor);
-                            // TildeTools ends
                             message.Draw("", "", () => PostMessageFunctionsShared(message));
                             PostMessageFunctions(message);
-                            // TildeTools
                             textColor.Pop();
                             // TildeTools ends
+                        // TildeTools
                         }
                         else
                         {
@@ -379,38 +386,30 @@ public unsafe class ChatWindow : Window
                                 isIncoming = message.IsIncoming;
                                 if(message.IsIncoming)
                                 {
-                                    // TildeTools
                                     textColor.Push(ImGuiCol.Text, Cust.ColorFromTitle);
-                                    // TildeTools ends
                                     Utils.DrawWrappedText($"From {message.OverrideName?.Split("@")[0] ?? subjectNoWorld}");
-                                    // TildeTools
                                     textColor.Pop();
-                                    // TildeTools ends
                                 }
                                 else
                                 {
-                                    // TildeTools
                                     textColor.Push(ImGuiCol.Text, Cust.ColorToTitle);
-                                    // TildeTools ends
                                     Utils.DrawWrappedText($"From {message.OverrideName?.Split("@")[0] ?? me}");
-                                    // TildeTools
                                     textColor.Pop();
-                                    // TildeTools ends
                                 }
                             }
                             ImGuiHelpers.ScaledDummy(new Vector2(20f, 1f));
                             ImGui.SameLine(0, 0);
-                            // TildeTools
                             textColor.Push(ImGuiCol.Text, message.IsIncoming ? Cust.ColorFromMessage : Cust.ColorToMessage);
-                            // TildeTools ends
                             message.Draw("[{timestamp}] ", "", () => PostMessageFunctionsShared(message));
                             PostMessageFunctions(message);
-                            // TildeTools
                             textColor.Pop();
-                            // TildeTools ends
+                        // TildeTools ends
                         }
+                        // TildeTools: Upstream's lines here moved with the indent
                     }
+                    // TildeTools: Upstream's closing lines here moved with the indent
 
+                    // TildeTools
                     if(ScrollToMessage == n)
                     {
                         PluginLog.Verbose($"Set scroll to {n}");
@@ -419,11 +418,11 @@ public unsafe class ChatWindow : Window
                     }
                     if(C.MessageSpacing > 0) ImGui.Dummy(new(C.MessageSpacing));
                 }
-                // TildeTools
                 // Popped before the scroll calls, which read ItemSpacing
                 spacing.Pop();
-                // TildeTools ends
                 if(MessageHistory.DoScroll > 0)
+                // TildeTools ends
+                // TildeTools
                 {
                     MessageHistory.DoScroll--;
                     ImGui.SetScrollHereY();
@@ -432,7 +431,6 @@ public unsafe class ChatWindow : Window
                 {
                     ImGui.SetScrollHereY();
                 }
-            // TildeTools
             }
 
             using var color = new ImRaii.ColorDisposable();
@@ -590,11 +588,9 @@ public unsafe class ChatWindow : Window
                     using(ImRaii.Tooltip())
                     {
                         using var wrap = ImRaii.TextWrapPos(ImGui.GetFontSize() * 45f);
-                    // TildeTools ends
                         ImGuiEx.Text($"This message will be split. Keep pressing send button or enter to sequentially send the following messages:\n\n{split.Print("\n\n")}");
                         ImGui.Separator();
                         ImGuiEx.Text(ImGuiColors.DalamudGrey3, $"Debug:\nFirst message:\n{firstMessage}\n\nRemainder:\n{remainder}");
-                    // TildeTools
                     }
                     font.Pop();
                     // TildeTools ends
