@@ -52,6 +52,9 @@ public unsafe class Messenger : IDalamudPlugin
         {
             EzConfig.Migrate<Config>();
             Config = EzConfig.Init<Config>();
+            // TildeTools
+            ConfigRanges.Clamp(Config);
+            // TildeTools ends
             WindowSystemMain = new();
             WindowSystemChat = new();
             SingletonServiceManager.Initialize(typeof(S));

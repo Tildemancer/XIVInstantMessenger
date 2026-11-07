@@ -1,6 +1,9 @@
 ﻿using ECommons.Configuration;
 using ECommons.Funding;
 using ECommons.Reflection;
+// TildeTools
+using Messenger.Configuration;
+// TildeTools ends
 
 namespace Messenger.Gui.Settings;
 
@@ -46,6 +49,9 @@ internal class GuiSettings : Window
             (Hosting.IsHosted ? null : "Debug", TabDebug.Draw, ImGuiColors.DalamudGrey3, true)
             // TildeTools ends
             );
+        // TildeTools
+        ConfigRanges.Clamp(C);
+        // TildeTools ends
     }
 
     public override void OnOpen()
