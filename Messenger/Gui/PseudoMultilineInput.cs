@@ -4,6 +4,9 @@ using ECommons.Throttlers;
 using Messenger.Services.EmojiLoaderService;
 // TildeTools: Regex using removed
 using TerraFX.Interop.Windows;
+// TildeTools
+using Dalamud.Interface.Utility.Raii;
+// TildeTools ends
 
 namespace Messenger.Gui;
 public unsafe partial class PseudoMultilineInput
@@ -289,7 +292,9 @@ public unsafe partial class PseudoMultilineInput
         {
             IsSelectingEmoji = false;
         }
-        if(ImGui.BeginPopup("XIMEmojiSelect", ImGuiWindowFlags.NoFocusOnAppearing))
+        // TildeTools
+        using(var popup = ImRaii.Popup("XIMEmojiSelect", ImGuiWindowFlags.NoFocusOnAppearing)) if(popup)
+        // TildeTools ends
         {
             if(ImGui.IsWindowAppearing())
             {
@@ -377,9 +382,13 @@ public unsafe partial class PseudoMultilineInput
                 var all = S.EmojiLoader.Emoji.Where(x => !C.FavoriteEmoji.Contains(x.Key));
                 if(fav.Any())
                 {
-                    ImGui.PushStyleColor(ImGuiCol.Text, ImGuiColors.ParsedGold);
+                    // TildeTools
+                    using var gold = ImRaii.PushColor(ImGuiCol.Text, ImGuiColors.ParsedGold);
+                    // TildeTools ends
                     var num = DrawEmojiSet(fav, "fav");
-                    ImGui.PopStyleColor();
+                    // TildeTools
+                    gold.Pop();
+                    // TildeTools ends
                     if(num > 0)
                     {
                         ImGui.SameLine();
@@ -391,7 +400,9 @@ public unsafe partial class PseudoMultilineInput
                 {
                     var num = 0;
                     List<Action> PostDrawAction = [];
-                    if(ImGui.BeginTable($"EmojiTable{id}", 2, ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.BordersInnerH))
+                    // TildeTools
+                    using(var table = ImRaii.Table($"EmojiTable{id}", 2, ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.BordersInnerH)) if(table)
+                    // TildeTools ends
                     {
                         ImGui.TableSetupColumn("image");
                         ImGui.TableSetupColumn("emojiText", ImGuiTableColumnFlags.WidthStretch);
@@ -431,9 +442,12 @@ public unsafe partial class PseudoMultilineInput
                             ImGuiEx.Text($":{em.Key}:");
                             index++;
                         }
-                        ImGui.EndTable();
-                        PostDrawAction.Each(x => x());
+                        // TildeTools: EndTable removed, the using ends it
+                        // TildeTools: PostDrawAction moved below, so it still runs after the table ends
                     }
+                    // TildeTools
+                    PostDrawAction.Each(x => x());
+                    // TildeTools ends
                     return num;
                 }
                 if(EmojiKeyboardSelecting)
@@ -442,7 +456,7 @@ public unsafe partial class PseudoMultilineInput
                     if(EmojiKeyboardSelectorRow >= index) EmojiKeyboardSelectorRow = 0;
                 }
             }
-            ImGui.EndPopup();
+            // TildeTools: EndPopup removed, the using ends it
         }
     }
 
@@ -477,7 +491,9 @@ public unsafe partial class PseudoMultilineInput
                 }
             }
         }
-        if(ImGui.BeginPopup($"EmojiContext{em.Key}"))
+        // TildeTools
+        using(var popup = ImRaii.Popup($"EmojiContext{em.Key}")) if(popup)
+        // TildeTools ends
         {
             if(ImGui.Selectable("Insert as sticker"))
             {
@@ -489,7 +505,7 @@ public unsafe partial class PseudoMultilineInput
                 CloseEmojiPopup = true;
                 CImGui.igClosePopupToLevel(1, false);
             }
-            ImGui.EndPopup();
+            // TildeTools: EndPopup removed, the using ends it
         }
     }
 
