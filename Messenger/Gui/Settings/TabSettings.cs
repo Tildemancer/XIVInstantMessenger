@@ -1,7 +1,7 @@
-﻿// TildeTools
+﻿namespace Messenger.Gui.Settings;
+// TildeTools
 using Dalamud.Interface.Utility.Raii;
 // TildeTools ends
-namespace Messenger.Gui.Settings;
 
 internal class TabSettings
 {
