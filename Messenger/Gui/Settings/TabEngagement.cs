@@ -4,6 +4,9 @@ using ECommons.PartyFunctions;
 using Messenger.Configuration;
 using NightmareUI.ImGuiElements;
 using System.IO;
+// TildeTools
+using Dalamud.Interface.Utility.Raii;
+// TildeTools ends
 
 namespace Messenger.Gui.Settings;
 public static class TabEngagement
@@ -21,7 +24,9 @@ public static class TabEngagement
             Utils.OpenEngagementCreation();
         }
 
-        if(ImGui.BeginTable("Engagements", 4, ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.NoSavedSettings | ImGuiTableFlags.RowBg | ImGuiTableFlags.Borders))
+        // TildeTools
+        using(var table = ImRaii.Table("Engagements", 4, ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.NoSavedSettings | ImGuiTableFlags.RowBg | ImGuiTableFlags.Borders)) if(table)
+        // TildeTools ends
         {
             ImGui.TableSetupColumn("##en");
             ImGui.TableSetupColumn("Name", ImGuiTableColumnFlags.WidthStretch);
@@ -29,10 +34,15 @@ public static class TabEngagement
             ImGui.TableSetupColumn("##control");
             ImGui.TableHeadersRow();
 
+            // TildeTools
+            using var id = new ImRaii.IdDisposable();
+            // TildeTools ends
             for(var i = 0; i < C.Engagements.Count; i++)
             {
                 var e = C.Engagements[i];
-                ImGui.PushID($"Eng{i}");
+                // TildeTools
+                id.Push($"Eng{i}");
+                // TildeTools ends
                 ImGui.TableNextRow();
                 ImGui.TableNextColumn();
                 ImGui.Checkbox($"##enable", ref e.Enabled);
@@ -60,22 +70,28 @@ public static class TabEngagement
                     Utils.Unload(e.GetSender());
                 }
                 ImGuiEx.Tooltip($"Removing an engagement will not cause it's log to be also deleted. If you will create an engagement with same name, log entries from it's log will be loaded. Hold CTRL and click to delete.");
-                ImGui.PopID();
+                // TildeTools
+                id.Pop();
+                // TildeTools ends
             }
 
-            ImGui.EndTable();
+            // TildeTools: EndTable removed, the using ends it
         }
     }
 
     public static void DrawRenameButton(EngagementInfo e, string id)
     {
-        ImGui.PushID(id);
+        // TildeTools
+        using var scope = ImRaii.PushId(id);
+        // TildeTools ends
         if(ImGuiEx.IconButton(FontAwesomeIcon.Edit))
         {
             ImGui.OpenPopup("RenameEngagement");
         }
         ImGuiEx.Tooltip($"Rename this engagement. It will be automatically closed and it will be renamed together with it's log. ");
-        if(ImGui.BeginPopup("RenameEngagement"))
+        // TildeTools
+        using(var popup = ImRaii.Popup("RenameEngagement")) if(popup)
+        // TildeTools ends
         {
             ImGuiEx.Text($"New name:");
             ImGui.SetNextItemWidth(150f);
@@ -111,20 +127,24 @@ public static class TabEngagement
                     ex.Log();
                 }
             }
-            ImGui.EndPopup();
+            // TildeTools: EndPopup removed, the using ends it
         }
-        ImGui.PopID();
+        // TildeTools: PopID removed, the using pops it
     }
 
     public static void DrawArchiveButton(EngagementInfo e, string id)
     {
-        ImGui.PushID(id);
+        // TildeTools
+        using var scope = ImRaii.PushId(id);
+        // TildeTools ends
         if(ImGuiEx.IconButton(FontAwesomeIcon.Database))
         {
             ImGui.OpenPopup("ArchiveEngagement");
         }
         ImGuiEx.Tooltip($"Archive this engagement. It will be automatically closed and it's log will be moved to archive folder and renamed. The engagement won't be deleted, it will simply restart anew.");
-        if(ImGui.BeginPopup("ArchiveEngagement"))
+        // TildeTools
+        using(var popup = ImRaii.Popup("ArchiveEngagement")) if(popup)
+        // TildeTools ends
         {
             ImGuiEx.Text($"Name the archived log:");
             ImGui.SetNextItemWidth(150f);
@@ -161,9 +181,9 @@ public static class TabEngagement
                     ex.Log();
                 }
             }
-            ImGui.EndPopup();
+            // TildeTools: EndPopup removed, the using ends it
         }
-        ImGui.PopID();
+        // TildeTools: PopID removed, the using pops it
     }
 
     public static void EditMemberList(EngagementInfo e)
@@ -172,7 +192,9 @@ public static class TabEngagement
         ImGui.Dummy(new Vector2(400, 400));
         ImGui.SetCursorPos(cur);
         ImGuiEx.SetNextItemFullWidth();
-        if(ImGui.BeginCombo("##NearbySelect", "Select from nearby players", ImGuiComboFlags.HeightLarge))
+        // TildeTools
+        using(var combo = ImRaii.Combo("##NearbySelect", "Select from nearby players", ImGuiComboFlags.HeightLarge)) if(combo)
+        // TildeTools ends
         {
             ImGui.SetNextItemWidth(150f);
             ref var fltr = ref Ref<string>.Get("SearchPlayers");
@@ -185,12 +207,14 @@ public static class TabEngagement
                     if(ImGui.Selectable(x.GetNameWithWorld())) e.Participants.Add(x.ToSender());
                 }
             }
-            ImGui.EndCombo();
+            // TildeTools: EndCombo removed, the using ends it
         }
         if(UniversalParty.Length > 1)
         {
             ImGui.SetNextItemWidth(400f);
-            if(ImGui.BeginCombo("##PartySelect", "Select from party", ImGuiComboFlags.HeightLarge))
+            // TildeTools
+            using(var combo = ImRaii.Combo("##PartySelect", "Select from party", ImGuiComboFlags.HeightLarge)) if(combo)
+            // TildeTools ends
             {
                 ImGui.SetNextItemWidth(150f);
                 ref var fltr = ref Ref<string>.Get("SearchPlayers");
@@ -205,7 +229,7 @@ public static class TabEngagement
                         if(ImGui.Selectable(x.NameWithWorld)) e.Participants.Add(sender);
                     }
                 }
-                ImGui.EndCombo();
+                // TildeTools: EndCombo removed, the using ends it
             }
         }
         ImGuiEx.InputWithRightButtonsArea(() =>
@@ -257,32 +281,46 @@ public static class TabEngagement
     public static void DrawEngagementEditTable(EngagementInfo e, bool widthStretch)
     {
         ImGui.Checkbox("Play sound on incoming message", ref e.PlaySound);
-        if(ImGui.BeginTable("##editMemListTable", 3, ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.RowBg | ImGuiTableFlags.Borders | ImGuiTableFlags.NoSavedSettings))
+        // TildeTools
+        using(var table = ImRaii.Table("##editMemListTable", 3, ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.RowBg | ImGuiTableFlags.Borders | ImGuiTableFlags.NoSavedSettings)) if(table)
+        // TildeTools ends
         {
             ImGui.TableSetupColumn("##name", widthStretch ? ImGuiTableColumnFlags.WidthStretch : default);
             ImGui.TableSetupColumn("##ctrl1");
             ImGui.TableSetupColumn("##ctrl2");
 
+            // TildeTools
+            using var id = new ImRaii.IdDisposable();
+            using var font = new ImRaii.FontDisposable();
+            // TildeTools ends
             foreach(var x in e.Participants)
             {
-                ImGui.PushID(x.GetPlayerName());
+                // TildeTools
+                id.Push(x.GetPlayerName());
+                // TildeTools ends
                 ImGui.TableNextRow();
                 ImGui.TableNextColumn();
                 ImGuiEx.TextV($"{x.GetPlayerName()}");
                 ImGui.TableNextColumn();
-                ImGui.PushFont(UiBuilder.IconFont);
+                // TildeTools
+                font.Push(UiBuilder.IconFont);
+                // TildeTools ends
                 ImGuiEx.CollectionButtonCheckbox(FontAwesomeIcon.PeopleArrows.ToIconString(), x, e.AllowDMs, EColor.Green, inverted: false);
-                ImGui.PopFont();
+                // TildeTools
+                font.Pop();
+                // TildeTools ends
                 ImGuiEx.Tooltip($"When enabled, Direct Messages from this player will be redirected to the engagement window. ");
                 ImGui.TableNextColumn();
                 if(ImGuiEx.IconButton(FontAwesomeIcon.Trash))
                 {
                     new TickScheduler(() => e.Participants.Remove(x));
                 }
-                ImGui.PopID();
+                // TildeTools
+                id.Pop();
+                // TildeTools ends
             }
 
-            ImGui.EndTable();
+            // TildeTools: EndTable removed, the using ends it
         }
     }
 }
