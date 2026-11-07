@@ -283,8 +283,8 @@ public unsafe class ChatWindow : Window
             var subjectNoWorld = MessageHistory.HistoryPlayer.GetPlayerName().Split("@")[0];
             var me = Svc.ClientState.LocalPlayer?.Name.ToString().Split("@")[0] ?? "Me";
             // TildeTools
-            // Upstream's child lines are indented into the using block, and their pushes and pops are swapped for ImRaii. The
-            // child's result stays unchecked, as upstream's was, since the body also merges the loaded log and counts down the scroll
+            // Upstream's child lines are indented into the using block, and their pushes and pops are swapped for ImRaii
+            // The child's result stays unchecked, as upstream's was, since the body also merges the loaded log and counts down the scroll
             using(ImRaii.Child($"##ChatChild{subject}", new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetContentRegionAvail().Y - fieldHeight)))
             {
                 // Its own color object, so a throw pops these before the child ends
