@@ -1,4 +1,7 @@
-﻿namespace Messenger.Gui.Settings;
+﻿// TildeTools
+using Dalamud.Interface.Utility.Raii;
+// TildeTools ends
+namespace Messenger.Gui.Settings;
 
 internal class TabSettings
 {
@@ -14,11 +17,14 @@ internal class TabSettings
                     ShellStart(logFolder);
                 }
                 ImGui.Checkbox("Enable context menu integration", ref C.ContextMenuEnable);
-                ImGui.Indent();
-                ImGui.SetNextItemWidth(60f);
-                ImGui.DragInt("Context menu priority", ref C.ContextMenuPriority.ValidateRange(-100, 100), 0.1f);
-                ImGuiEx.HelpMarker($"This option sets priority of XIM's context menu related to other plugins' context menu options. Negative priority will put menu item on top of the list.");
-                ImGui.Unindent();
+                // TildeTools
+                using(ImRaii.PushIndent())
+                {
+                    ImGui.SetNextItemWidth(60f);
+                    ImGui.DragInt("Context menu priority", ref C.ContextMenuPriority.ValidateRange(-100, 100), 0.1f);
+                    ImGuiEx.HelpMarker($"This option sets priority of XIM's context menu related to other plugins' context menu options. Negative priority will put menu item on top of the list.");
+                }
+                // TildeTools ends
                 if(ImGui.Checkbox("Tabs instead of windows", ref C.Tabs))
                 {
                     P.Tabs(C.Tabs);
@@ -81,11 +87,13 @@ internal class TabSettings
                 ImGui.Checkbox("Hide DMs from in-game chat", ref C.DefaultChannelCustomization.SuppressDMs);
                 if(Utils.IsChatBubblesEnabled)
                 {
-                    ImGui.Indent();
+                    // TildeTools
+                    using var bubblesIndent = ImRaii.PushIndent();
+                    // TildeTools ends
                     ImGuiEx.TextWrapped(EColor.RedBright, """
                         While chat bubbles are enabled this option will have no effect. Hide desired message types from in-game log using game's own functions (Chat log settings - Log Filters). You may keep this option enabled to re-activate it automatically once hiding chat messages will be made possible while keeping bubbles intact.
                         """);
-                    ImGui.Unindent();
+                    // TildeTools: Unindent removed, the using ends it
                 }
                 ImGui.Checkbox("Auto-hide chat windows in combat", ref C.AutoHideCombat);
                 ImGui.Checkbox("Auto-hide chat windows in duty", ref C.AutoHideDuty);
@@ -121,16 +129,21 @@ internal class TabSettings
                 }
                 // TildeTools ends
                 ImGui.Checkbox("Double-press enter to send message", ref C.DoubleEnterSend);
-                ImGui.Indent();
-                ImGui.SetNextItemWidth(150f);
-                ImGuiEx.SliderIntAsFloat("Maximum double-press delay", ref C.DoubleEnterDelay, 200, 500);
-                ImGui.Unindent();
+                // TildeTools
+                using(ImRaii.PushIndent())
+                {
+                    ImGui.SetNextItemWidth(150f);
+                    ImGuiEx.SliderIntAsFloat("Maximum double-press delay", ref C.DoubleEnterDelay, 200, 500);
+                }
+                // TildeTools ends
                 ImGui.Checkbox("Enable auto-save", ref C.UseAutoSave);
                 ImGuiEx.HelpMarker($"As you type, XIM will periodically auto-save message. Should you accidentally delete it, or should it fail to be sent, you can retrieve it from \"Recent\" tab. Auto-save also happens before message gets sent and when you unfocus input area.");
-                ImGui.Indent();
+                // TildeTools
+                using var indent = ImRaii.PushIndent();
+                // TildeTools ends
                 ImGui.SetNextItemWidth(150f);
                 ImGui.SliderInt("Auto-save interval, seconds", ref C.AutoSaveInterval, 10, 60);
-                ImGui.Unindent();
+                // TildeTools: Unindent removed, the using ends it
             }, null, true),
             ("Quick button", delegate
             {
@@ -140,7 +153,9 @@ internal class TabSettings
                     ImGuiEx.Text("Attach button to UI element:");
                     ImGui.SameLine();
                     ImGui.SetNextItemWidth(100f);
-                    if(ImGui.BeginCombo("##bindquick", C.AddonName.GetAddonName()))
+                    // TildeTools
+                    using(var combo = ImRaii.Combo("##bindquick", C.AddonName.GetAddonName())) if(combo)
+                    // TildeTools ends
                     {
                         if(ImGui.Selectable("".GetAddonName()))
                         {
@@ -174,7 +189,7 @@ internal class TabSettings
                         ImGuiEx.Text("Enter manually:");
                         ImGuiEx.SetNextItemFullWidth();
                         ImGui.InputText("##bindquick2", ref C.AddonName, 50);
-                        ImGui.EndCombo();
+                        // TildeTools: EndCombo removed, the using ends it
                     }
                     ImGui.SameLine();
                     ImGuiEx.Text("X:");
@@ -255,7 +270,9 @@ internal class TabSettings
             {
                 ImGui.Checkbox("Enable message splitter", ref C.SplitterEnable);
                 ImGuiEx.HelpMarker($"When you write message longer than normally possible, XIM will split it in few sequential parts. You will have to press send button multiple times to send multiple messages.");
-                ImGui.Indent();
+                // TildeTools
+                using var indent = ImRaii.PushIndent();
+                // TildeTools ends
                 ImGui.Checkbox("Enable manual splitting", ref C.SplitterManually);
                 ImGui.SetNextItemWidth(100f);
                 ImGui.InputText($"Split/continuation indicator", ref C.SplitterManualIndicator, 10);
@@ -269,15 +286,17 @@ internal class TabSettings
                 ImGuiEx.HelpMarker("Replace manual continuation indicator with another one.");
                 if(C.SplitterIndicatorOverride != null)
                 {
-                    ImGui.Indent();
+                    // TildeTools
+                    using var innerIndent = ImRaii.PushIndent();
+                    // TildeTools ends
                     ImGui.SetNextItemWidth(100f);
                     ImGui.InputText($"Split/continuation indicator override", ref C.SplitterIndicatorOverride, 10);
-                    ImGui.Unindent();
+                    // TildeTools: Unindent removed, the using ends it
                 }
                 ImGui.SetNextItemWidth(150f);
                 ImGuiEx.SliderIntAsFloat("Delay between messages being sent, seconds", ref C.IntervalBetweenSends, 200, 2000);
                 ImGuiEx.HelpMarker($"Choose delay big enough to not get throttled by the server in channels that you're mostly using.");
-                ImGui.Unindent();
+                // TildeTools: Unindent removed, the using ends it
             }, null, true)
             , ("Proxy", C.ProxySettings.ImGuiDrawNoCollapsingHeader, null, true)
         );
